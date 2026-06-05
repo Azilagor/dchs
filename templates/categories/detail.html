@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="container page">
+    <p class="eyebrow">Категория</p>
+    <h1>{{ category.name }}</h1>
+    {% if category.description %}<p class="lead">{{ category.description }}</p>{% endif %}
+    <div class="list-stack">
+        {% for item in materials %}
+            {% include "partials/material_row.html" %}
+        {% else %}
+            <div class="empty">В этой категории пока нет опубликованных материалов.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

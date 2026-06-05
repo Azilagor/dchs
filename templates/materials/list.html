@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Материалы · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="container page">
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">Каталог</p>
+            <h1>Материалы справочника</h1>
+        </div>
+    </div>
+
+    <form method="get" class="filters">
+        <input type="search" name="q" value="{{ q }}" placeholder="Поиск по названию, тексту, номеру приказа">
+        <select name="category">
+            <option value="">Все категории</option>
+            {% for cat in categories %}<option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+        </select>
+        <select name="material_type">
+            <option value="">Все типы</option>
+            {% for type in material_types %}<option value="{{ type }}" {% if selected_material_type == type %}selected{% endif %}>{{ type|material_type_label }}</option>{% endfor %}
+        </select>
+        <select name="tag">
+            <option value="">Все теги</option>
+            {% for t in tags %}<option value="{{ t.slug }}" {% if selected_tag == t.slug %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+        </select>
+        <button type="submit">Фильтровать</button>
+    </form>
+
+    <div class="list-stack">
+        {% for item in materials %}
+            {% include "partials/material_row.html" %}
+        {% else %}
+            <div class="empty">По заданным параметрам ничего не найдено.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

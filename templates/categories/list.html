@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Категории · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="container page">
+    <p class="eyebrow">Разделы</p>
+    <h1>Категории справочника</h1>
+    <div class="cards-grid">
+        {% for category in categories %}
+        <article class="card">
+            <h3><a href="/categories/{{ category.slug }}">{{ category.name }}</a></h3>
+            {% if category.description %}<p>{{ category.description }}</p>{% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

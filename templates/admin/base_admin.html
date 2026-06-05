@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container admin-layout">
+    <aside class="admin-sidebar">
+        <a href="/admin">Обзор</a>
+        <a href="/admin/materials">Материалы</a>
+        <a href="/admin/categories">Категории</a>
+        <a href="/admin/departments">Отделы</a>
+        {% if current_user.role == 'admin' %}<a href="/admin/users">Пользователи</a>{% endif %}
+        <a href="/">На сайт</a>
+    </aside>
+    <div class="admin-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+</section>
+{% endblock %}

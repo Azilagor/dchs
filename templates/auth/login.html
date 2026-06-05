@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Вход · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="auth-page">
+    <form method="post" class="auth-card">
+        <h1>Вход</h1>
+        <p class="muted">Для редакторов и сотрудников с внутренним доступом.</p>
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+        <label>Email</label>
+        <input type="email" name="email" required>
+        <label>Пароль</label>
+        <input type="password" name="password" required>
+        <button type="submit">Войти</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Админка · {{ PROJECT_NAME }}{% endblock %}
+{% block admin_content %}
+<div class="section-head">
+    <h1>Панель управления</h1>
+    <a class="button" href="/admin/materials/create">Добавить материал</a>
+</div>
+<div class="stats-grid">
+    <div class="stat"><b>{{ stats.materials }}</b><span>Материалов</span></div>
+    <div class="stat"><b>{{ stats.published }}</b><span>Опубликовано</span></div>
+    <div class="stat"><b>{{ stats.drafts }}</b><span>Черновиков</span></div>
+    <div class="stat"><b>{{ stats.categories }}</b><span>Категорий</span></div>
+    <div class="stat"><b>{{ stats.users }}</b><span>Пользователей</span></div>
+</div>
+<h2>Последние изменения</h2>
+<table class="table">
+    <thead><tr><th>Название</th><th>Тип</th><th>Статус</th><th>Обновлено</th></tr></thead>
+    <tbody>
+    {% for item in latest %}
+        <tr>
+            <td><a href="/admin/materials/{{ item.id }}/edit">{{ item.title }}</a></td>
+            <td>{{ item.material_type|material_type_label }}</td>
+            <td>{{ item.status|status_label }}</td>
+            <td>{{ item.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

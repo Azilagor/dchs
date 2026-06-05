@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Главная · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-copy">
+            <h1>Департамент ЧС по г.Алматы</h1>
+            <p class="hero-text">Единое пространство для быстрого доступа к внутренним материалам, справочной информации и важным публикациям.</p>
+            <form action="/materials" method="get" class="search-box">
+                <input type="search" name="q" placeholder="Например: эвакуация, пожарная безопасность, приказ №...">
+                <button type="submit">Найти</button>
+            </form>
+        </div>
+        <div class="hero-slider" data-slider>
+            <div class="hero-slider-track">
+                <figure class="hero-slide is-active">
+                    <img src="/site-assets/photo1.jpeg" alt="Сотрудники ДЧС">
+                </figure>
+                <figure class="hero-slide">
+                    <img src="/site-assets/photo2.jpeg" alt="Рабочие материалы ДЧС">
+                </figure>
+            </div>
+            <div class="hero-slider-controls">
+                <button type="button" class="slider-arrow" data-slider-prev aria-label="Предыдущее изображение">‹</button>
+                <div class="slider-dots">
+                    <button type="button" class="slider-dot is-active" data-slider-dot="0" aria-label="Слайд 1"></button>
+                    <button type="button" class="slider-dot" data-slider-dot="1" aria-label="Слайд 2"></button>
+                </div>
+                <button type="button" class="slider-arrow" data-slider-next aria-label="Следующее изображение">›</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container section">
+    <div class="section-head">
+        <h2>Быстрые разделы</h2>
+        <a href="/materials">Все материалы</a>
+    </div>
+    <div class="type-grid">
+        {% for type in material_types %}
+            <a class="type-card" href="/materials?material_type={{ type }}">{{ type|material_type_label }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+{% if pinned_materials %}
+<section class="container section">
+    <div class="section-head"><h2>Закрепленные материалы</h2></div>
+    <div class="cards-grid">
+        {% for item in pinned_materials %}
+            {% include "partials/material_card.html" %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="container section two-cols">
+    <div>
+        <div class="section-head"><h2>Последние материалы</h2></div>
+        <div class="list-stack">
+            {% for item in latest_materials %}
+                {% include "partials/material_row.html" %}
+            {% else %}
+                <p class="muted">Материалы пока не добавлены.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <aside>
+        <div class="panel">
+            <h3>Категории</h3>
+            <div class="chips">
+                {% for category in categories %}
+                    <a href="/categories/{{ category.slug }}">{{ category.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="panel">
+            <h3>Популярное</h3>
+            {% for item in popular_materials %}
+                <a class="small-link" href="/materials/{{ item.slug }}">{{ item.title }}</a>
+            {% endfor %}
+        </div>
+    </aside>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(() => {
+    const slider = document.querySelector("[data-slider]");
+    if (!slider) return;
+
+    const slides = Array.from(slider.querySelectorAll(".hero-slide"));
+    const dots = Array.from(slider.querySelectorAll(".slider-dot"));
+    const prev = slider.querySelector("[data-slider-prev]");
+    const next = slider.querySelector("[data-slider-next]");
+    let index = 0;
+
+    function render(nextIndex) {
+        index = (nextIndex + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+        dots.forEach((dot, i) => dot.classList.toggle("is-active", i === index));
+    }
+
+    prev?.addEventListener("click", () => render(index - 1));
+    next?.addEventListener("click", () => render(index + 1));
+    dots.forEach((dot, i) => dot.addEventListener("click", () => render(i)));
+
+    setInterval(() => render(index + 1), 5000);
+})();
+</script>
+{% endblock %}

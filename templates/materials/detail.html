@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ material.title }} · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="container page detail-layout">
+    <article class="detail">
+        <div class="meta">
+            <span>{{ material.material_type|material_type_label }}</span>
+            <span>{{ material.visibility|visibility_label }}</span>
+            {% if material.category %}<a href="/categories/{{ material.category.slug }}">{{ material.category.name }}</a>{% endif %}
+        </div>
+        <h1>{{ material.title }}</h1>
+        {% if material.order_number %}<p class="order-number">Номер: {{ material.order_number }}</p>{% endif %}
+        {% if material.short_description %}<p class="lead">{{ material.short_description }}</p>{% endif %}
+
+        {% if material.content %}
+            <div class="content-body">{{ material.content | replace('\n', '<br>') | safe }}</div>
+        {% endif %}
+
+        {% if material.files %}
+        <section class="attachment-section">
+            <h2>Файлы</h2>
+            {% for file in material.files %}
+                <a class="attachment" href="/{{ file.file_path }}" target="_blank">
+                    <span>{{ file.title or file.original_name }}</span>
+                    <small>{{ file.file_type or 'Файл' }}</small>
+                </a>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if material.links %}
+        <section class="attachment-section">
+            <h2>Ссылки</h2>
+            {% for link in material.links %}
+                <a class="attachment" href="{{ link.url }}" target="_blank">{{ link.title }}</a>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if material.videos %}
+        <section class="attachment-section">
+            <h2>Видео</h2>
+            {% for video in material.videos %}
+                <a class="attachment" href="{{ video.video_url or video.embed_url }}" target="_blank">{{ video.title or 'Видео' }}</a>
+            {% endfor %}
+        </section>
+        {% endif %}
+    </article>
+
+    <aside>
+        <div class="panel">
+            <h3>Информация</h3>
+            <p><b>Просмотров:</b> {{ material.views_count }}</p>
+            {% if material.department %}<p><b>Отдел:</b> {{ material.department.name }}</p>{% endif %}
+            {% if material.published_at %}<p><b>Опубликовано:</b> {{ material.published_at.strftime('%d.%m.%Y') }}</p>{% endif %}
+            {% if material.tags %}
+                <div class="chips">
+                    {% for tag in material.tags %}<a href="/materials?tag={{ tag.slug }}">#{{ tag.name }}</a>{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% if related %}
+        <div class="panel">
+            <h3>Похожие материалы</h3>
+            {% for item in related %}<a class="small-link" href="/materials/{{ item.slug }}">{{ item.title }}</a>{% endfor %}
+        </div>
+        {% endif %}
+    </aside>
+</section>
+{% endblock %}

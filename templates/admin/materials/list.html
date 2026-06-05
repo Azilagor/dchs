@@ -1,0 +1,28 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Материалы · Админка{% endblock %}
+{% block admin_content %}
+<div class="section-head">
+    <h1>Материалы</h1>
+    <a class="button" href="/admin/materials/create">Добавить</a>
+</div>
+<table class="table">
+    <thead><tr><th>Название</th><th>Категория</th><th>Тип</th><th>Статус</th><th>Доступ</th><th></th></tr></thead>
+    <tbody>
+    {% for item in materials %}
+        <tr>
+            <td><a href="/admin/materials/{{ item.id }}/edit">{{ item.title }}</a></td>
+            <td>{{ item.category.name if item.category else '—' }}</td>
+            <td>{{ item.material_type|material_type_label }}</td>
+            <td>{{ item.status|status_label }}</td>
+            <td>{{ item.visibility|visibility_label }}</td>
+            <td class="actions">
+                <a href="/materials/{{ item.slug }}" target="_blank">Открыть</a>
+                <form method="post" action="/admin/materials/{{ item.id }}/status"><input type="hidden" name="status" value="published"><button>Опубликовать</button></form>
+                <form method="post" action="/admin/materials/{{ item.id }}/status"><input type="hidden" name="status" value="archived"><button>В архив</button></form>
+                {% if current_user.role == 'admin' %}<form method="post" action="/admin/materials/{{ item.id }}/delete" onsubmit="return confirm('Удалить материал?')"><button class="danger">Удалить</button></form>{% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

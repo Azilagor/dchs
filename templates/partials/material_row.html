@@ -1,0 +1,11 @@
+<article class="row-card">
+    <div>
+        <div class="meta">
+            <span>{{ item.material_type|material_type_label }}</span>
+            {% if item.category %}<span>{{ item.category.name }}</span>{% endif %}
+        </div>
+        <h3><a href="/materials/{{ item.slug }}">{{ item.title }}</a></h3>
+        {% if item.short_description %}<p>{{ item.short_description }}</p>{% endif %}
+    </div>
+    <a class="btn-light" href="/materials/{{ item.slug }}">Открыть</a>
+</article>

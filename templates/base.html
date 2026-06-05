@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ PROJECT_NAME }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="container nav">
+        <a class="brand" href="/">
+            <img class="brand-logo" src="/site-assets/logo.jpg" alt="Логотип">
+            <div class="brand-copy">
+                <span class="brand-subtitle">Департамент ЧС по г. Алматы</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="/materials">Материалы</a>
+            <a href="/categories">Категории</a>
+            {% if current_user %}
+                {% if current_user.role in ['admin', 'moderator', 'editor'] %}<a href="/admin">Админка</a>{% endif %}
+                <a href="/logout">Выйти</a>
+            {% else %}
+                <a href="/login">Войти</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+<main>
+    {% block content %}{% endblock %}
+</main>
+<footer class="footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <img class="footer-logo" src="/site-assets/logo.jpg" alt="Логотип">
+            <div>
+                <strong>Департамент ЧС по городу Алматы</strong>
+                <p>Информационно-справочная система для сотрудников и внутренних материалов.</p>
+            </div>
+        </div>
+        <div>
+            <h3>Контакты</h3>
+            <a class="footer-link" href="tel:+77273379248">+7 (727) 337-92-48</a>
+            <a class="footer-link" href="mailto:admin@mchs.local">admin@mchs.local</a>
+            <p>Пн — Пт</p>
+            <p>09:00–18:30</p>
+            <p>Перерыв 13:00–14:30</p>
+        </div>
+        <div>
+            <h3>Адрес</h3>
+            <p>Проспект Серкебаева, 129</p>
+            <p>проспект Гагарина, 153</p>
+            <p>улица Басенова, 8</p>
+            <p>Бостандыкский район, Алматы</p>
+            <p>050060 / A15E4H2</p>
+        </div>
+        <div>
+            <h3>Соцсети</h3>
+            <a class="footer-link" href="#">Instagram</a>
+            <a class="footer-link" href="#">Telegram</a>
+            <a class="footer-link" href="#">YouTube</a>
+        </div>
+    </div>
+</footer>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

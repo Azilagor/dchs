@@ -1,0 +1,15 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Категории · Админка{% endblock %}
+{% block admin_content %}
+<h1>Категории</h1>
+<form method="post" class="inline-form">
+    <input type="text" name="name" placeholder="Название категории" required>
+    <input type="number" name="sort_order" value="0" placeholder="Порядок">
+    <input type="text" name="description" placeholder="Описание">
+    <button>Добавить</button>
+</form>
+<table class="table">
+    <thead><tr><th>Название</th><th>Slug</th><th>Описание</th></tr></thead>
+    <tbody>{% for item in categories %}<tr><td>{{ item.name }}</td><td>{{ item.slug }}</td><td>{{ item.description or '—' }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}

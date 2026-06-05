@@ -1,0 +1,103 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if material %}Редактировать{% else %}Добавить{% endif %} материал{% endblock %}
+{% block admin_content %}
+<h1>{% if material %}Редактировать материал{% else %}Новый материал{% endif %}</h1>
+<form method="post" enctype="multipart/form-data" class="form-grid">
+    <div class="form-main">
+        <label>Название</label>
+        <input type="text" name="title" value="{{ material.title if material else '' }}" required>
+
+        <label>Краткое описание</label>
+        <textarea name="short_description" rows="3">{{ material.short_description if material else '' }}</textarea>
+
+        <label>Основной текст</label>
+        <textarea id="content-editor" name="content" rows="14">{{ material.content if material else '' }}</textarea>
+
+        <label>Теги через запятую</label>
+        <input type="text" name="tags" value="{{ tag_value }}" placeholder="пожарная безопасность, эвакуация">
+
+        <label>Ссылки: одна строка = Название|URL</label>
+        <textarea name="links" rows="4" placeholder="Официальный сайт|https://example.com">{{ link_value }}</textarea>
+
+        <label>Видео: одна строка = Название|URL</label>
+        <textarea name="videos" rows="4" placeholder="Инструктаж|https://youtube.com/...">{{ video_value }}</textarea>
+
+        <label>Файлы</label>
+        <input type="file" name="files" multiple>
+        {% if material and material.files %}
+            <div class="existing-files">
+                {% for file in material.files %}<a href="/{{ file.file_path }}" target="_blank">{{ file.original_name }}</a>{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <aside class="form-side">
+        <label>Тип</label>
+        <select name="material_type" required>
+            {% for type in material_types %}<option value="{{ type }}" {% if material and material.material_type == type %}selected{% endif %}>{{ type|material_type_label }}</option>{% endfor %}
+        </select>
+
+        <label>Статус</label>
+        <select name="status">
+            {% for s in statuses %}<option value="{{ s }}" {% if material and material.status == s %}selected{% endif %}>{{ s|status_label }}</option>{% endfor %}
+        </select>
+
+        <label>Доступ</label>
+        <select name="visibility">
+            {% for v in visibilities %}<option value="{{ v }}" {% if material and material.visibility == v %}selected{% endif %}>{{ v|visibility_label }}</option>{% endfor %}
+        </select>
+
+        <label>Категория</label>
+        <select name="category_id">
+            <option value="0">Без категории</option>
+            {% for cat in categories %}<option value="{{ cat.id }}" {% if material and material.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+        </select>
+
+        <label>Отдел</label>
+        <select name="department_id">
+            <option value="0">Не указан</option>
+            {% for dep in departments %}<option value="{{ dep.id }}" {% if material and material.department_id == dep.id %}selected{% endif %}>{{ dep.name }}</option>{% endfor %}
+        </select>
+
+        <label>Номер приказа / документа</label>
+        <input type="text" name="order_number" value="{{ material.order_number if material else '' }}">
+
+        <label class="checkbox"><input type="checkbox" name="is_pinned" value="true" {% if material and material.is_pinned %}checked{% endif %}> Закрепить</label>
+
+        <button type="submit">Сохранить</button>
+        <a class="btn-light center" href="/admin/materials">Отмена</a>
+    </aside>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+<script>
+(() => {
+    if (typeof tinymce === "undefined") return;
+
+    tinymce.init({
+        selector: "#content-editor",
+        height: 460,
+        menubar: "file edit view insert format tools table help",
+        plugins: "advlist autolink lists link table code preview searchreplace wordcount fullscreen autoresize",
+        toolbar: [
+            "undo redo | blocks | bold italic underline | forecolor backcolor |",
+            "alignleft aligncenter alignright alignjustify | bullist numlist outdent indent |",
+            "link table | removeformat code preview fullscreen"
+        ].join(" "),
+        branding: false,
+        promotion: false,
+        browser_spellcheck: true,
+        contextmenu: false,
+        content_style: "body { font-family: Segoe UI, Tahoma, sans-serif; font-size: 15px; line-height: 1.65; }"
+    });
+
+    const form = document.querySelector(".form-grid");
+    form?.addEventListener("submit", () => {
+        tinymce.triggerSave();
+    });
+})();
+</script>
+{% endblock %}

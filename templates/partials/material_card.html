@@ -1,0 +1,12 @@
+<article class="card">
+    <div class="meta">
+        <span>{{ item.material_type|material_type_label }}</span>
+        {% if item.visibility == 'internal' %}<span>Внутренний</span>{% endif %}
+    </div>
+    <h3><a href="/materials/{{ item.slug }}">{{ item.title }}</a></h3>
+    {% if item.short_description %}<p>{{ item.short_description }}</p>{% endif %}
+    <div class="card-foot">
+        {% if item.category %}<a href="/categories/{{ item.category.slug }}">{{ item.category.name }}</a>{% endif %}
+        <span>{{ item.views_count }} просмотров</span>
+    </div>
+</article>
