@@ -10,10 +10,10 @@
         </div>
         <h1>{{ material.title }}</h1>
         {% if material.order_number %}<p class="order-number">Номер: {{ material.order_number }}</p>{% endif %}
-        {% if material.short_description %}<p class="lead">{{ material.short_description }}</p>{% endif %}
+        {% if material.short_description %}<div class="lead rich-text compact-rich-text">{{ material.short_description | safe }}</div>{% endif %}
 
         {% if material.content %}
-            <div class="content-body">{{ material.content | replace('\n', '<br>') | safe }}</div>
+            <div class="content-body rich-text">{{ material.content | replace('\n', '<br>') | safe }}</div>
         {% endif %}
 
         {% if material.files %}

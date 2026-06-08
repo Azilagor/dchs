@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.config import PAGE_SIZE
 from app.database import get_db
 from app.models import Category, Material, Tag
 from app.security import get_current_user
@@ -62,6 +63,7 @@ def material_list(
     category: str = "",
     material_type: str = "",
     tag: str = "",
+    page: int = 1,
     db: Session = Depends(get_db),
 ):
     current_user = get_current_user(request, db)
@@ -84,7 +86,18 @@ def material_list(
     if tag:
         query = query.join(Material.tags).filter(Tag.slug == tag)
 
-    materials = query.order_by(Material.is_pinned.desc(), Material.published_at.desc().nullslast(), Material.created_at.desc()).all()
+    page = max(page, 1)
+    total = query.count()
+    total_pages = max((total + PAGE_SIZE - 1) // PAGE_SIZE, 1)
+    if page > total_pages:
+        page = total_pages
+
+    materials = (
+        query.order_by(Material.is_pinned.desc(), Material.published_at.desc().nullslast(), Material.created_at.desc())
+        .offset((page - 1) * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .all()
+    )
     categories = db.query(Category).filter(Category.is_active.is_(True)).order_by(Category.sort_order, Category.name).all()
     tags = db.query(Tag).order_by(Tag.name).all()
     return templates.TemplateResponse(
@@ -101,6 +114,9 @@ def material_list(
             "selected_category": category,
             "selected_material_type": material_type,
             "selected_tag": tag,
+            "page": page,
+            "total_pages": total_pages,
+            "total_materials": total,
         },
     )
 

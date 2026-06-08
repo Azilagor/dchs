@@ -6,6 +6,7 @@
         <div>
             <p class="eyebrow">Каталог</p>
             <h1>Материалы справочника</h1>
+            <p class="muted">Всего найдено: {{ total_materials }}</p>
         </div>
     </div>
 
@@ -33,5 +34,17 @@
             <div class="empty">По заданным параметрам ничего не найдено.</div>
         {% endfor %}
     </div>
+
+    {% if total_pages > 1 %}
+    <nav class="pagination">
+        {% if page > 1 %}
+            <a class="btn-light" href="?q={{ q }}&category={{ selected_category }}&material_type={{ selected_material_type }}&tag={{ selected_tag }}&page={{ page - 1 }}">Назад</a>
+        {% endif %}
+        <span class="pagination-current">Страница {{ page }} из {{ total_pages }}</span>
+        {% if page < total_pages %}
+            <a class="btn-light" href="?q={{ q }}&category={{ selected_category }}&material_type={{ selected_material_type }}&tag={{ selected_tag }}&page={{ page + 1 }}">Вперед</a>
+        {% endif %}
+    </nav>
+    {% endif %}
 </section>
 {% endblock %}

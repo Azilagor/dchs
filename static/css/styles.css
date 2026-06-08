@@ -86,6 +86,20 @@ h3 { margin: 0 0 12px; }
     background: #fff;
 }
 textarea { resize: vertical; }
+.title-input {
+    min-height: 58px;
+    font-size: 20px;
+    font-weight: 700;
+}
+.compact-textarea {
+    min-height: 110px;
+}
+.field-hint {
+    margin: -4px 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
 button, .button {
     border: 0;
     border-radius: 12px;
@@ -211,11 +225,26 @@ button:hover, .button:hover { background: var(--primary-dark); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips a { background: #f2f4f7; border-radius: 999px; padding: 8px 10px; color: var(--muted); }
 .small-link { display: block; padding: 10px 0; border-top: 1px solid var(--line); color: var(--text); }
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+.pagination-current {
+    color: var(--muted);
+    font-weight: 700;
+}
 .filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 24px; }
 .empty { padding: 32px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); background: #fff; }
 .detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
 .detail { padding: 32px; }
 .content-body { line-height: 1.75; font-size: 17px; margin-top: 26px; }
+.rich-text p:first-child { margin-top: 0; }
+.rich-text p:last-child { margin-bottom: 0; }
+.compact-rich-text { margin-bottom: 22px; }
 .order-number { color: var(--primary); font-weight: 800; }
 .attachment-section { margin-top: 32px; }
 .attachment { display: flex; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #f8fafc; border: 1px solid var(--line); border-radius: 14px; margin: 8px 0; }

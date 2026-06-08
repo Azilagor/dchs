@@ -2,7 +2,10 @@
 {% block title %}Материалы · Админка{% endblock %}
 {% block admin_content %}
 <div class="section-head">
-    <h1>Материалы</h1>
+    <div>
+        <h1>Материалы</h1>
+        <p class="muted">Всего материалов: {{ total_materials }}</p>
+    </div>
     <a class="button" href="/admin/materials/create">Добавить</a>
 </div>
 <table class="table">
@@ -25,4 +28,16 @@
     {% endfor %}
     </tbody>
 </table>
+
+{% if total_pages > 1 %}
+<nav class="pagination">
+    {% if page > 1 %}
+        <a class="btn-light" href="/admin/materials?page={{ page - 1 }}">Назад</a>
+    {% endif %}
+    <span class="pagination-current">Страница {{ page }} из {{ total_pages }}</span>
+    {% if page < total_pages %}
+        <a class="btn-light" href="/admin/materials?page={{ page + 1 }}">Вперед</a>
+    {% endif %}
+</nav>
+{% endif %}
 {% endblock %}
