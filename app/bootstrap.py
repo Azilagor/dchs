@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy.orm import Session
 
-from app.models import Category, Department, Material, User
+from app.models import Category, Department, HeroSlide, Material, User
 from app.search_index import refresh_material_search_text
 from app.security import hash_password
 from app.utils import slugify, unique_material_slug
@@ -51,6 +51,24 @@ def ensure_seed_data(db: Session) -> tuple[str, str]:
         )
 
     db.commit()
+
+    slides = [
+        ("Сотрудники ДЧС", "Сотрудники ДЧС", "photo1.jpeg", "photo1.jpeg"),
+        ("Рабочие материалы ДЧС", "Рабочие материалы ДЧС", "photo2.jpeg", "photo2.jpeg"),
+    ]
+    if db.query(HeroSlide).count() == 0:
+        for order, (title, subtitle, image_path, image_name) in enumerate(slides):
+            db.add(
+                HeroSlide(
+                    title=title,
+                    subtitle=subtitle,
+                    image_path=image_path,
+                    image_name=image_name,
+                    sort_order=order,
+                    is_active=True,
+                )
+            )
+        db.commit()
 
     if db.query(Material).count() == 0:
         category = db.query(Category).filter(Category.name == "Пожарная безопасность").first()

@@ -3,6 +3,7 @@
 {% block admin_content %}
 <h1>Пользователи</h1>
 <form method="post" class="inline-form">
+    {{ csrf_input(request) }}
     <input type="text" name="full_name" placeholder="ФИО" required>
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Пароль" required>

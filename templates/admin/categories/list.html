@@ -3,6 +3,7 @@
 {% block admin_content %}
 <h1>Категории</h1>
 <form method="post" class="inline-form">
+    {{ csrf_input(request) }}
     <input type="text" name="name" placeholder="Название категории" required>
     <input type="number" name="sort_order" value="0" placeholder="Порядок">
     <input type="text" name="description" placeholder="Описание">

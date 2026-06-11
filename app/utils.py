@@ -15,6 +15,60 @@ CYRILLIC_MAP = {
     "ә": "a", "ғ": "g", "қ": "q", "ң": "n", "ө": "o", "ұ": "u", "ү": "u", "һ": "h", "і": "i",
 }
 
+UPLOAD_SIGNATURES = {
+    ".pdf": [b"%PDF-"],
+    ".jpg": [b"\xff\xd8\xff"],
+    ".jpeg": [b"\xff\xd8\xff"],
+    ".png": [b"\x89PNG\r\n\x1a\n"],
+    ".webp": [b"RIFF"],
+    ".zip": [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],
+    ".docx": [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],
+    ".xlsx": [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],
+    ".pptx": [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],
+    ".rtf": [b"{\\rtf"],
+}
+
+ALLOWED_CONTENT_TYPES = {
+    ".pdf": {"application/pdf", "application/octet-stream"},
+    ".doc": {"application/msword", "application/octet-stream"},
+    ".docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/zip",
+        "application/octet-stream",
+    },
+    ".xls": {"application/vnd.ms-excel", "application/octet-stream"},
+    ".xlsx": {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/zip",
+        "application/octet-stream",
+    },
+    ".ppt": {"application/vnd.ms-powerpoint", "application/octet-stream"},
+    ".pptx": {
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/zip",
+        "application/octet-stream",
+    },
+    ".txt": {"text/plain", "application/octet-stream"},
+    ".rtf": {"application/rtf", "text/rtf", "application/octet-stream"},
+    ".jpg": {"image/jpeg", "application/octet-stream"},
+    ".jpeg": {"image/jpeg", "application/octet-stream"},
+    ".png": {"image/png", "application/octet-stream"},
+    ".webp": {"image/webp", "application/octet-stream"},
+    ".mp4": {"video/mp4", "application/octet-stream"},
+    ".avi": {"video/x-msvideo", "video/avi", "application/octet-stream"},
+    ".mov": {"video/quicktime", "application/octet-stream"},
+    ".zip": {"application/zip", "application/x-zip-compressed", "application/octet-stream"},
+}
+
+BLOCKED_MAGIC_HEADERS = (
+    b"MZ",
+    b"\x7fELF",
+    b"\xcf\xfa\xed\xfe",
+    b"\xfe\xed\xfa\xcf",
+    b"\xca\xfe\xba\xbe",
+    b"#!",
+)
+
 
 def slugify(value: str) -> str:
     value = value.strip().lower()
@@ -78,6 +132,36 @@ def parse_lines(raw: str) -> list[tuple[str, str]]:
     return items
 
 
+def _looks_like_text(content: bytes) -> bool:
+    if not content:
+        return True
+    text_bytes = sum(byte in b"\t\n\r\f\b" or 32 <= byte <= 126 or byte >= 128 for byte in content)
+    return (text_bytes / len(content)) >= 0.85
+
+
+def _validate_upload_signature(filename: str, content_type: str | None, header: bytes) -> None:
+    suffix = Path(filename).suffix.lower()
+    if header.startswith(BLOCKED_MAGIC_HEADERS):
+        raise ValueError(f"Файл '{filename}' отклонен из соображений безопасности.")
+
+    allowed_types = ALLOWED_CONTENT_TYPES.get(suffix)
+    if content_type and allowed_types and content_type not in allowed_types:
+        raise ValueError(f"Файл '{filename}' имеет неподдерживаемый content-type: {content_type}.")
+
+    signatures = UPLOAD_SIGNATURES.get(suffix, [])
+    if suffix == ".webp":
+        if not (header.startswith(b"RIFF") and b"WEBP" in header[:16]):
+            raise ValueError(f"Файл '{filename}' не похож на корректный WEBP.")
+    elif suffix == ".mp4":
+        if len(header) < 12 or b"ftyp" not in header[:32]:
+            raise ValueError(f"Файл '{filename}' не похож на корректный MP4.")
+    elif suffix in {".txt", ".doc", ".xls", ".ppt", ".avi", ".mov"}:
+        if not _looks_like_text(header) and suffix in {".txt"}:
+            raise ValueError(f"Файл '{filename}' не похож на текстовый документ.")
+    elif signatures and not any(header.startswith(signature) for signature in signatures):
+        raise ValueError(f"Файл '{filename}' не прошел проверку сигнатуры.")
+
+
 async def save_upload_file(upload: UploadFile, folder: str = "documents") -> dict | None:
     if not upload or not upload.filename:
         return None
@@ -86,6 +170,10 @@ async def save_upload_file(upload: UploadFile, folder: str = "documents") -> dic
     if suffix not in ALLOWED_UPLOAD_EXTENSIONS:
         allowed = ", ".join(ALLOWED_UPLOAD_EXTENSIONS)
         raise ValueError(f"Файл '{upload.filename}' запрещен. Разрешены только: {allowed}.")
+
+    header = upload.file.read(8192)
+    upload.file.seek(0)
+    _validate_upload_signature(upload.filename, upload.content_type, header)
 
     target_dir = UPLOAD_DIR / folder
     target_dir.mkdir(parents=True, exist_ok=True)

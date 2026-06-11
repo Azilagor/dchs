@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.config import ADMIN_PAGE_SIZE, MAX_UPLOAD_SIZE_MB
 from app.database import get_db
-from app.models import Category, Department, Material, MaterialFile, MaterialLink, MaterialVersion, MaterialVideo, Tag, User
-from app.security import hash_password, require_roles
+from app.models import Category, Department, HeroSlide, Material, MaterialFile, MaterialLink, MaterialVersion, MaterialVideo, User
+from app.security import hash_password, require_roles, validate_csrf
 from app.search_index import refresh_file_extracted_text, refresh_material_search_text
 from app.template_config import templates
 from app.utils import get_or_create_tags, parse_lines, save_upload_file, slugify, unique_material_slug
@@ -33,6 +33,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "categories": db.query(Category).count(),
         "users": db.query(User).count(),
         "files": db.query(MaterialFile).count(),
+        "slides": db.query(HeroSlide).count(),
         "storage_mb": round(total_storage_bytes / (1024 * 1024), 2),
     }
     latest = db.query(Material).order_by(Material.updated_at.desc()).limit(8).all()
@@ -72,6 +73,135 @@ def admin_materials(request: Request, page: int = 1, db: Session = Depends(get_d
     )
 
 
+@router.get("/slides")
+def slides_page(request: Request, db: Session = Depends(get_db)):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    slides = db.query(HeroSlide).order_by(HeroSlide.sort_order, HeroSlide.id).all()
+    return templates.TemplateResponse(
+        request,
+        "admin/slides/list.html",
+        {"request": request, "current_user": current_user, "slides": slides},
+    )
+
+
+@router.get("/slides/create")
+def create_slide_page(request: Request, db: Session = Depends(get_db)):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    context = _slide_form_context(request, current_user, slide=None)
+    return templates.TemplateResponse(request, "admin/slides/form.html", context)
+
+
+@router.post("/slides/create")
+async def create_slide(
+    request: Request,
+    title: str = Form(...),
+    subtitle: str = Form(""),
+    sort_order: int = Form(0),
+    is_active: bool = Form(False),
+    csrf_token: str = Form(...),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
+    try:
+        saved = await save_upload_file(image, "sliders")
+        if not saved:
+            raise ValueError("Изображение слайда не загружено.")
+    except ValueError as exc:
+        context = _slide_form_context(
+            request,
+            current_user,
+            slide=None,
+            error=str(exc),
+            form_values={"title": title, "subtitle": subtitle, "sort_order": sort_order, "is_active": is_active},
+        )
+        return templates.TemplateResponse(request, "admin/slides/form.html", context, status_code=400)
+
+    db.add(
+        HeroSlide(
+            title=title,
+            subtitle=subtitle,
+            sort_order=sort_order,
+            is_active=is_active,
+            image_path=saved["file_path"],
+            image_name=saved["original_name"],
+        )
+    )
+    db.commit()
+    return RedirectResponse(url="/admin/slides", status_code=303)
+
+
+@router.get("/slides/{slide_id}/edit")
+def edit_slide_page(slide_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    slide = db.query(HeroSlide).filter(HeroSlide.id == slide_id).first()
+    if not slide:
+        return RedirectResponse(url="/admin/slides", status_code=303)
+    context = _slide_form_context(request, current_user, slide=slide)
+    return templates.TemplateResponse(request, "admin/slides/form.html", context)
+
+
+@router.post("/slides/{slide_id}/edit")
+async def edit_slide(
+    slide_id: int,
+    request: Request,
+    title: str = Form(...),
+    subtitle: str = Form(""),
+    sort_order: int = Form(0),
+    is_active: bool = Form(False),
+    csrf_token: str = Form(...),
+    image: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
+    slide = db.query(HeroSlide).filter(HeroSlide.id == slide_id).first()
+    if not slide:
+        return RedirectResponse(url="/admin/slides", status_code=303)
+
+    slide.title = title
+    slide.subtitle = subtitle
+    slide.sort_order = sort_order
+    slide.is_active = is_active
+
+    if image and image.filename:
+        try:
+            saved = await save_upload_file(image, "sliders")
+            if not saved:
+                raise ValueError("Изображение слайда не загружено.")
+        except ValueError as exc:
+            context = _slide_form_context(
+                request,
+                current_user,
+                slide=slide,
+                error=str(exc),
+                form_values={"title": title, "subtitle": subtitle, "sort_order": sort_order, "is_active": is_active},
+            )
+            return templates.TemplateResponse(request, "admin/slides/form.html", context, status_code=400)
+        slide.image_path = saved["file_path"]
+        slide.image_name = saved["original_name"]
+
+    db.commit()
+    return RedirectResponse(url="/admin/slides", status_code=303)
+
+
+@router.post("/slides/{slide_id}/delete")
+def delete_slide(
+    slide_id: int,
+    request: Request,
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
+    slide = db.query(HeroSlide).filter(HeroSlide.id == slide_id).first()
+    if slide:
+        db.delete(slide)
+        db.commit()
+    return RedirectResponse(url="/admin/slides", status_code=303)
+
+
 @router.get("/materials/create")
 def create_material_page(request: Request, db: Session = Depends(get_db)):
     current_user = require_roles(request, db, ["admin", "moderator", "editor"])
@@ -95,10 +225,12 @@ async def create_material(
     tags: str = Form(""),
     links: str = Form(""),
     videos: str = Form(""),
+    csrf_token: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
 ):
     current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
     material = Material(
         title=title,
         slug=unique_material_slug(db, title),
@@ -186,10 +318,12 @@ async def edit_material(
     tags: str = Form(""),
     links: str = Form(""),
     videos: str = Form(""),
+    csrf_token: str = Form(...),
     files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
 ):
     current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
     material = db.query(Material).filter(Material.id == material_id).first()
     if not material:
         return RedirectResponse(url="/admin/materials", status_code=303)
@@ -264,8 +398,15 @@ async def edit_material(
 
 
 @router.post("/materials/{material_id}/status")
-def update_material_status(material_id: int, request: Request, status: str = Form(...), db: Session = Depends(get_db)):
+def update_material_status(
+    material_id: int,
+    request: Request,
+    status: str = Form(...),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
     current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
     material = db.query(Material).filter(Material.id == material_id).first()
     if material and status in STATUSES:
         material.status = status
@@ -277,8 +418,14 @@ def update_material_status(material_id: int, request: Request, status: str = For
 
 
 @router.post("/materials/{material_id}/delete")
-def delete_material(material_id: int, request: Request, db: Session = Depends(get_db)):
+def delete_material(
+    material_id: int,
+    request: Request,
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
     require_roles(request, db, ["admin"])
+    validate_csrf(request, csrf_token)
     material = db.query(Material).filter(Material.id == material_id).first()
     if material:
         db.delete(material)
@@ -303,9 +450,11 @@ def create_category(
     name: str = Form(...),
     description: str = Form(""),
     sort_order: int = Form(0),
+    csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
     category = Category(name=name, slug=_unique_category_slug(db, name), description=description, sort_order=sort_order)
     db.add(category)
     db.commit()
@@ -324,8 +473,15 @@ def departments_page(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/departments")
-def create_department(request: Request, name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
+def create_department(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
     require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
     exists = db.query(Department).filter(Department.name == name).first()
     if not exists:
         db.add(Department(name=name, description=description))
@@ -351,9 +507,11 @@ def create_user(
     full_name: str = Form(...),
     password: str = Form(...),
     role: str = Form("staff"),
+    csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_roles(request, db, ["admin"])
+    validate_csrf(request, csrf_token)
     exists = db.query(User).filter(User.email == email).first()
     if not exists and role in ROLES:
         db.add(User(email=email, full_name=full_name, hashed_password=hash_password(password), role=role))
@@ -400,6 +558,30 @@ def _material_form_context(
         "form_values": values,
         "error": error,
         "max_upload_size_mb": MAX_UPLOAD_SIZE_MB,
+    }
+
+
+def _slide_form_context(
+    request: Request,
+    current_user: User,
+    slide: HeroSlide | None,
+    error: str | None = None,
+    form_values: dict | None = None,
+):
+    values = {
+        "title": slide.title if slide else "",
+        "subtitle": slide.subtitle if slide else "",
+        "sort_order": slide.sort_order if slide else 0,
+        "is_active": slide.is_active if slide else True,
+    }
+    if form_values:
+        values.update(form_values)
+    return {
+        "request": request,
+        "current_user": current_user,
+        "slide": slide,
+        "form_values": values,
+        "error": error,
     }
 
 

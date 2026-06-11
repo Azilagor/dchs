@@ -1,0 +1,35 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if slide %}Редактировать{% else %}Добавить{% endif %} слайд{% endblock %}
+{% block admin_content %}
+<h1>{% if slide %}Редактировать слайд{% else %}Новый слайд{% endif %}</h1>
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+<form method="post" enctype="multipart/form-data" class="form-grid">
+    {{ csrf_input(request) }}
+    <div class="form-main">
+        <label>Заголовок</label>
+        <input type="text" name="title" value="{{ form_values.title }}" required>
+
+        <label>Подпись</label>
+        <textarea name="subtitle" rows="4">{{ form_values.subtitle }}</textarea>
+
+        <label>Изображение</label>
+        <input type="file" name="image" {% if not slide %}required{% endif %} accept=".jpg,.jpeg,.png,.webp">
+        <p class="field-hint">Лучше использовать горизонтальное изображение для первого экрана.</p>
+        {% if slide %}
+            <a class="small-link" href="/slides/{{ slide.id }}/image" target="_blank">Текущее изображение: {{ slide.image_name }}</a>
+        {% endif %}
+    </div>
+
+    <aside class="form-side">
+        <label>Порядок</label>
+        <input type="number" name="sort_order" value="{{ form_values.sort_order }}">
+
+        <label class="checkbox"><input type="checkbox" name="is_active" value="true" {% if form_values.is_active %}checked{% endif %}> Показывать на главной</label>
+
+        <button type="submit">Сохранить</button>
+        <a class="btn-light center" href="/admin/slides">Отмена</a>
+    </aside>
+</form>
+{% endblock %}

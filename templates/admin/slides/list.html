@@ -1,0 +1,33 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Слайдер · Админка{% endblock %}
+{% block admin_content %}
+<div class="section-head">
+    <div>
+        <h1>Слайдер главной страницы</h1>
+        <p class="muted">Управление изображениями первого экрана.</p>
+    </div>
+    <a class="button" href="/admin/slides/create">Добавить слайд</a>
+</div>
+<table class="table">
+    <thead><tr><th>Порядок</th><th>Слайд</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+    {% for slide in slides %}
+        <tr>
+            <td>{{ slide.sort_order }}</td>
+            <td>
+                <div><b>{{ slide.title }}</b></div>
+                {% if slide.subtitle %}<div class="muted">{{ slide.subtitle }}</div>{% endif %}
+                <a class="small-link" href="/slides/{{ slide.id }}/image" target="_blank">{{ slide.image_name }}</a>
+            </td>
+            <td>{{ "Активен" if slide.is_active else "Скрыт" }}</td>
+            <td class="actions">
+                <a href="/admin/slides/{{ slide.id }}/edit">Редактировать</a>
+                <form method="post" action="/admin/slides/{{ slide.id }}/delete" onsubmit="return confirm('Удалить слайд?')">{{ csrf_input(request) }}<button class="danger">Удалить</button></form>
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4">Слайды пока не добавлены.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

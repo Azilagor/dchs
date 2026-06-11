@@ -10,17 +10,17 @@
         </div>
         <h1>{{ material.title }}</h1>
         {% if material.order_number %}<p class="order-number">Номер: {{ material.order_number }}</p>{% endif %}
-        {% if material.short_description %}<div class="lead rich-text compact-rich-text">{{ material.short_description | safe }}</div>{% endif %}
+        {% if material.short_description %}<div class="lead rich-text compact-rich-text">{{ material.short_description | nl2br }}</div>{% endif %}
 
         {% if material.content %}
-            <div class="content-body rich-text">{{ material.content | replace('\n', '<br>') | safe }}</div>
+            <div class="content-body rich-text">{{ material.content | nl2br }}</div>
         {% endif %}
 
         {% if material.files %}
         <section class="attachment-section">
             <h2>Файлы</h2>
             {% for file in material.files %}
-                <a class="attachment" href="/{{ file.file_path }}" target="_blank">
+                <a class="attachment" href="/files/{{ file.id }}/download" target="_blank">
                     <span>{{ file.title or file.original_name }}</span>
                     <small>{{ file.file_type or 'Файл' }}</small>
                 </a>

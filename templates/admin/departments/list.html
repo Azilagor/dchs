@@ -3,6 +3,7 @@
 {% block admin_content %}
 <h1>Отделы</h1>
 <form method="post" class="inline-form">
+    {{ csrf_input(request) }}
     <input type="text" name="name" placeholder="Название отдела" required>
     <input type="text" name="description" placeholder="Описание">
     <button>Добавить</button>

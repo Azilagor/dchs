@@ -3,6 +3,7 @@
 {% block content %}
 <section class="auth-page">
     <form method="post" class="auth-card">
+        {{ csrf_input(request) }}
         <h1>Вход</h1>
         <p class="muted">Для редакторов и сотрудников с внутренним доступом.</p>
         {% if error %}<div class="alert">{{ error }}</div>{% endif %}

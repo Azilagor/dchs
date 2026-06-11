@@ -35,6 +35,20 @@ class Department(Base):
 
     materials = relationship("Material", back_populates="department")
 
+
+class HeroSlide(Base):
+    __tablename__ = "hero_slides"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    subtitle = Column(String(500), nullable=True)
+    image_path = Column(String(1000), nullable=False)
+    image_name = Column(String(500), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    sort_order = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
 class Category(Base):
     __tablename__ = "categories"
 

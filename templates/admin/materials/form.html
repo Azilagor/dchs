@@ -6,6 +6,7 @@
 <div class="alert">{{ error }}</div>
 {% endif %}
 <form method="post" enctype="multipart/form-data" class="form-grid">
+    {{ csrf_input(request) }}
     <div class="form-main">
         <label>Название</label>
         <input class="title-input" type="text" name="title" value="{{ form_values.title }}" required>
@@ -32,7 +33,7 @@
         <p class="field-hint">Разрешенные форматы: {{ ALLOWED_UPLOAD_EXTENSIONS|join(', ') }}</p>
         {% if material and material.files %}
             <div class="existing-files">
-                {% for file in material.files %}<a href="/{{ file.file_path }}" target="_blank">{{ file.original_name }}</a>{% endfor %}
+                {% for file in material.files %}<a href="/files/{{ file.id }}/download" target="_blank">{{ file.original_name }}</a>{% endfor %}
             </div>
         {% endif %}
     </div>

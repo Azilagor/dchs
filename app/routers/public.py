@@ -1,17 +1,15 @@
 from pathlib import Path
 
-import re
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.config import PAGE_SIZE
+from app.config import BASE_DIR, PAGE_SIZE
 from app.database import get_db
-from app.models import Category, Material, MaterialFile, MaterialLink, Tag
+from app.models import Category, HeroSlide, Material, MaterialFile, MaterialLink, Tag
 from app.security import get_current_user
-from app.search_index import strip_markup
+from app.search_index import resolve_upload_path, strip_markup
 from app.template_config import templates
 from app.utils import material_type_label
 
@@ -27,6 +25,16 @@ SITE_ASSETS = {
     "photo1.jpeg": Path("photo1.jpeg"),
     "photo2.jpeg": Path("photo2.jpeg"),
 }
+
+
+def resolve_slide_image_path(image_path: str) -> Path | None:
+    if not image_path:
+        return None
+    if image_path.startswith("uploads/"):
+        return resolve_upload_path(image_path)
+    candidate = BASE_DIR / image_path
+    return candidate if candidate.exists() else None
+
 
 def accessible_materials(db: Session, current_user):
     query = db.query(Material).options(joinedload(Material.category), joinedload(Material.tags)).filter(Material.status == "published")
@@ -63,10 +71,12 @@ def make_search_snippet(material: Material) -> str:
         return material.category.name if material.category else "Открыть материал"
     return clean[:140] + ("..." if len(clean) > 140 else "")
 
+
 @router.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user(request, db)
     base = accessible_materials(db, current_user)
+    slides = db.query(HeroSlide).filter(HeroSlide.is_active.is_(True)).order_by(HeroSlide.sort_order, HeroSlide.id).all()
     pinned_materials = base.filter(Material.is_pinned.is_(True)).order_by(Material.published_at.desc().nullslast()).limit(6).all()
     latest_materials = base.order_by(Material.published_at.desc().nullslast(), Material.created_at.desc()).limit(8).all()
     popular_materials = base.order_by(Material.views_count.desc(), Material.created_at.desc()).limit(5).all()
@@ -97,6 +107,7 @@ def home(request: Request, db: Session = Depends(get_db)):
             "categories": categories,
             "material_types": MATERIAL_TYPES,
             "featured_sections": featured_sections,
+            "slides": slides,
         },
     )
 
@@ -107,6 +118,48 @@ def site_asset(filename: str):
     if not asset_path or not asset_path.exists():
         raise HTTPException(status_code=404, detail="Asset not found")
     return FileResponse(asset_path)
+
+
+@router.get("/slides/{slide_id}/image")
+def slide_image(slide_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user(request, db)
+    slide = db.query(HeroSlide).filter(HeroSlide.id == slide_id).first()
+    if not slide:
+        raise HTTPException(status_code=404, detail="Слайд не найден")
+    if not slide.is_active and not current_user:
+        raise HTTPException(status_code=404, detail="Слайд не найден")
+    image_path = resolve_slide_image_path(slide.image_path)
+    if not image_path or not image_path.exists():
+        raise HTTPException(status_code=404, detail="Изображение не найдено")
+    return FileResponse(image_path)
+
+
+@router.get("/files/{file_id}/download")
+def download_file(file_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user(request, db)
+    file = (
+        db.query(MaterialFile)
+        .options(joinedload(MaterialFile.material).joinedload(Material.category))
+        .filter(MaterialFile.id == file_id)
+        .first()
+    )
+    if not file or not file.material:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+
+    material = file.material
+    is_privileged_user = bool(current_user and current_user.role in {"admin", "moderator", "editor"})
+    if not is_privileged_user:
+        if material.status != "published":
+            raise HTTPException(status_code=404, detail="Файл не найден")
+        if material.visibility != "public" and not current_user:
+            raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    file_path = resolve_upload_path(file.file_path)
+    if not file_path or not file_path.exists():
+        raise HTTPException(status_code=404, detail="Файл не найден")
+
+    media_type = file.file_type or "application/octet-stream"
+    return FileResponse(file_path, media_type=media_type, filename=file.original_name)
 
 
 @router.get("/api/search")
@@ -135,6 +188,7 @@ def live_search(request: Request, q: str = "", limit: int = 8, db: Session = Dep
         for item in materials
     ]
     return JSONResponse({"items": items})
+
 
 @router.get("/materials")
 def material_list(
@@ -192,6 +246,7 @@ def material_list(
         },
     )
 
+
 @router.get("/materials/{slug}")
 def material_detail(slug: str, request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user(request, db)
@@ -207,7 +262,7 @@ def material_detail(slug: str, request: Request, db: Session = Depends(get_db)):
         query = query.filter(Material.visibility == "public")
     material = query.first()
     if not material:
-        return templates.TemplateResponse(request,"errors/404.html", {"request": request, "current_user": current_user}, status_code=404)
+        return templates.TemplateResponse(request, "errors/404.html", {"request": request, "current_user": current_user}, status_code=404)
 
     material.views_count += 1
     db.commit()
@@ -226,17 +281,19 @@ def material_detail(slug: str, request: Request, db: Session = Depends(get_db)):
         {"request": request, "current_user": current_user, "material": material, "related": related},
     )
 
+
 @router.get("/categories")
 def category_list(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user(request, db)
     categories = db.query(Category).filter(Category.is_active.is_(True)).order_by(Category.sort_order, Category.name).all()
-    return templates.TemplateResponse(request,"categories/list.html", {"request": request, "current_user": current_user, "categories": categories})
+    return templates.TemplateResponse(request, "categories/list.html", {"request": request, "current_user": current_user, "categories": categories})
+
 
 @router.get("/categories/{slug}")
 def category_detail(slug: str, request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user(request, db)
     category = db.query(Category).filter(Category.slug == slug, Category.is_active.is_(True)).first()
     if not category:
-        return templates.TemplateResponse(request,"errors/404.html", {"request": request, "current_user": current_user}, status_code=404)
+        return templates.TemplateResponse(request, "errors/404.html", {"request": request, "current_user": current_user}, status_code=404)
     materials = accessible_materials(db, current_user).filter(Material.category_id == category.id).order_by(Material.published_at.desc().nullslast()).all()
-    return templates.TemplateResponse(request,"categories/detail.html", {"request": request, "current_user": current_user, "category": category, "materials": materials})
+    return templates.TemplateResponse(request, "categories/detail.html", {"request": request, "current_user": current_user, "category": category, "materials": materials})

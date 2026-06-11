@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.bootstrap import ensure_seed_data
-from app.config import BASE_DIR, SECRET_KEY, UPLOAD_DIR
+from app.config import BASE_DIR, SECRET_KEY, SESSION_HTTPS_ONLY, SESSION_SAME_SITE
 from app.database import Base, SessionLocal, engine, ensure_runtime_schema
 from app.routers import admin, auth, public
 from app.template_config import templates
@@ -13,10 +13,15 @@ Base.metadata.create_all(bind=engine)
 ensure_runtime_schema()
 
 app = FastAPI(title="MCHS Directory")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax", https_only=False)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    same_site=SESSION_SAME_SITE,
+    https_only=SESSION_HTTPS_ONLY,
+    session_cookie="mchs_session",
+)
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.include_router(auth.router)
 app.include_router(public.router)

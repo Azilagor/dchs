@@ -20,9 +20,9 @@
             <td>{{ item.visibility|visibility_label }}</td>
             <td class="actions">
                 <a href="/materials/{{ item.slug }}" target="_blank">Открыть</a>
-                <form method="post" action="/admin/materials/{{ item.id }}/status"><input type="hidden" name="status" value="published"><button>Опубликовать</button></form>
-                <form method="post" action="/admin/materials/{{ item.id }}/status"><input type="hidden" name="status" value="archived"><button>В архив</button></form>
-                {% if current_user.role == 'admin' %}<form method="post" action="/admin/materials/{{ item.id }}/delete" onsubmit="return confirm('Удалить материал?')"><button class="danger">Удалить</button></form>{% endif %}
+                <form method="post" action="/admin/materials/{{ item.id }}/status">{{ csrf_input(request) }}<input type="hidden" name="status" value="published"><button>Опубликовать</button></form>
+                <form method="post" action="/admin/materials/{{ item.id }}/status">{{ csrf_input(request) }}<input type="hidden" name="status" value="archived"><button>В архив</button></form>
+                {% if current_user.role == 'admin' %}<form method="post" action="/admin/materials/{{ item.id }}/delete" onsubmit="return confirm('Удалить материал?')">{{ csrf_input(request) }}<button class="danger">Удалить</button></form>{% endif %}
             </td>
         </tr>
     {% endfor %}
