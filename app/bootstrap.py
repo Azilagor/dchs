@@ -38,9 +38,26 @@ def ensure_seed_data(db: Session) -> tuple[str, str]:
         ("Приказы", "Внутренние и публичные приказы"),
         ("Видеоинструкции", "Обучающие видео и записи инструктажей"),
     ]
+    featured_names = {
+        "Государственный инспектор в области пожарной безопасности",
+        "Сотрудникам Службы пожаротушения и аварийно-спасательных работ",
+    }
     for order, (name, description) in enumerate(categories):
-        if not db.query(Category).filter(Category.name == name).first():
-            db.add(Category(name=name, slug=slugify(name), description=description, sort_order=order))
+        category = db.query(Category).filter(Category.name == name).first()
+        if not category:
+            db.add(
+                Category(
+                    name=name,
+                    slug=slugify(name),
+                    description=description,
+                    sort_order=order,
+                    featured_on_home=name in featured_names,
+                )
+            )
+        else:
+            if name in featured_names and not category.featured_on_home:
+                category.featured_on_home = True
+                category.sort_order = order
 
     if not db.query(Department).filter(Department.name == "Учебно-методический отдел").first():
         db.add(

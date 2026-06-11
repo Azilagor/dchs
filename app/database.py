@@ -20,6 +20,9 @@ def ensure_runtime_schema():
         "material_files": {
             "extracted_text": "TEXT",
         },
+        "categories": {
+            "featured_on_home": "BOOLEAN DEFAULT 0",
+        },
     }
     with engine.begin() as connection:
         inspector = inspect(connection)

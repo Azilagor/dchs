@@ -450,12 +450,19 @@ def create_category(
     name: str = Form(...),
     description: str = Form(""),
     sort_order: int = Form(0),
+    featured_on_home: bool = Form(False),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_roles(request, db, ["admin", "moderator", "editor"])
     validate_csrf(request, csrf_token)
-    category = Category(name=name, slug=_unique_category_slug(db, name), description=description, sort_order=sort_order)
+    category = Category(
+        name=name,
+        slug=_unique_category_slug(db, name),
+        description=description,
+        sort_order=sort_order,
+        featured_on_home=featured_on_home,
+    )
     db.add(category)
     db.commit()
     return RedirectResponse(url="/admin/categories", status_code=303)
@@ -482,6 +489,7 @@ def edit_category(
     description: str = Form(""),
     sort_order: int = Form(0),
     is_active: bool = Form(False),
+    featured_on_home: bool = Form(False),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
@@ -496,6 +504,7 @@ def edit_category(
     category.description = description
     category.sort_order = sort_order
     category.is_active = is_active
+    category.featured_on_home = featured_on_home
     db.commit()
     return RedirectResponse(url="/admin/categories", status_code=303)
 

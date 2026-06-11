@@ -58,6 +58,7 @@ class Category(Base):
     description = Column(Text, nullable=True)
     parent_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    featured_on_home = Column(Boolean, default=False, nullable=False)
     sort_order = Column(Integer, default=0, nullable=False)
 
     parent = relationship("Category", remote_side=[id], backref="children")
