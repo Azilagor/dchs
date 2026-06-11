@@ -159,7 +159,9 @@ def download_file(file_id: int, request: Request, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Файл не найден")
 
     media_type = file.file_type or "application/octet-stream"
-    return FileResponse(file_path, media_type=media_type, filename=file.original_name)
+    response = FileResponse(file_path, media_type=media_type)
+    response.headers["Content-Disposition"] = f'inline; filename="{file.original_name}"'
+    return response
 
 
 @router.get("/api/search")
