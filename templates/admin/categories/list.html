@@ -1,8 +1,14 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Категории · Админка{% endblock %}
 {% block admin_content %}
-<h1>Категории</h1>
-<form method="post" class="inline-form">
+<div class="section-head">
+    <div>
+        <h1>Категории</h1>
+        <p class="muted">Управление разделами материалов.</p>
+    </div>
+    <a class="button" href="/admin/categories/create-anchor" onclick="document.getElementById('category-create-form').scrollIntoView({behavior: 'smooth'}); return false;">Добавить категорию</a>
+</div>
+<form method="post" class="inline-form" id="category-create-form">
     {{ csrf_input(request) }}
     <input type="text" name="name" placeholder="Название категории" required>
     <input type="number" name="sort_order" value="0" placeholder="Порядок">
@@ -10,7 +16,20 @@
     <button>Добавить</button>
 </form>
 <table class="table">
-    <thead><tr><th>Название</th><th>Slug</th><th>Описание</th></tr></thead>
-    <tbody>{% for item in categories %}<tr><td>{{ item.name }}</td><td>{{ item.slug }}</td><td>{{ item.description or '—' }}</td></tr>{% endfor %}</tbody>
+    <thead><tr><th>Название</th><th>Slug</th><th>Описание</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+    {% for item in categories %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.slug }}</td>
+            <td>{{ item.description or '—' }}</td>
+            <td>{{ "Активна" if item.is_active else "Скрыта" }}</td>
+            <td class="actions">
+                <a href="/admin/categories/{{ item.id }}/edit">Редактировать</a>
+                <form method="post" action="/admin/categories/{{ item.id }}/delete" onsubmit="return confirm('Удалить категорию? Материалы останутся без категории.')">{{ csrf_input(request) }}<button class="danger">Удалить</button></form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
 </table>
 {% endblock %}

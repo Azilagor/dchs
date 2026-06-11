@@ -461,6 +461,62 @@ def create_category(
     return RedirectResponse(url="/admin/categories", status_code=303)
 
 
+@router.get("/categories/{category_id}/edit")
+def edit_category_page(category_id: int, request: Request, db: Session = Depends(get_db)):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        return RedirectResponse(url="/admin/categories", status_code=303)
+    return templates.TemplateResponse(
+        request,
+        "admin/categories/form.html",
+        {"request": request, "current_user": current_user, "category": category, "error": None},
+    )
+
+
+@router.post("/categories/{category_id}/edit")
+def edit_category(
+    category_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    sort_order: int = Form(0),
+    is_active: bool = Form(False),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    current_user = require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        return RedirectResponse(url="/admin/categories", status_code=303)
+
+    category.name = name
+    category.slug = _unique_category_slug(db, name, current_id=category.id)
+    category.description = description
+    category.sort_order = sort_order
+    category.is_active = is_active
+    db.commit()
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
+@router.post("/categories/{category_id}/delete")
+def delete_category(
+    category_id: int,
+    request: Request,
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    require_roles(request, db, ["admin", "moderator", "editor"])
+    validate_csrf(request, csrf_token)
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if category:
+        db.query(Material).filter(Material.category_id == category.id).update({Material.category_id: None})
+        db.delete(category)
+        db.commit()
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
 @router.get("/departments")
 def departments_page(request: Request, db: Session = Depends(get_db)):
     current_user = require_roles(request, db, ["admin", "moderator", "editor"])
@@ -641,11 +697,15 @@ async def _append_files(material: Material, files: Optional[List[UploadFile]]):
             material.files.append(file)
 
 
-def _unique_category_slug(db: Session, name: str) -> str:
+def _unique_category_slug(db: Session, name: str, current_id: int | None = None) -> str:
     base = slugify(name)
     slug = base
     counter = 2
-    while db.query(Category).filter(Category.slug == slug).first():
+    while True:
+        query = db.query(Category).filter(Category.slug == slug)
+        if current_id:
+            query = query.filter(Category.id != current_id)
+        if not query.first():
+            return slug
         slug = f"{base}-{counter}"
         counter += 1
-    return slug

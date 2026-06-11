@@ -1,0 +1,28 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Редактировать категорию{% endblock %}
+{% block admin_content %}
+<h1>Редактировать категорию</h1>
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+<form method="post" class="form-grid">
+    {{ csrf_input(request) }}
+    <div class="form-main">
+        <label>Название</label>
+        <input type="text" name="name" value="{{ category.name }}" required>
+
+        <label>Описание</label>
+        <textarea name="description" rows="6">{{ category.description or "" }}</textarea>
+    </div>
+
+    <aside class="form-side">
+        <label>Порядок</label>
+        <input type="number" name="sort_order" value="{{ category.sort_order }}">
+
+        <label class="checkbox"><input type="checkbox" name="is_active" value="true" {% if category.is_active %}checked{% endif %}> Показывать на сайте</label>
+
+        <button type="submit">Сохранить</button>
+        <a class="btn-light center" href="/admin/categories">Отмена</a>
+    </aside>
+</form>
+{% endblock %}
