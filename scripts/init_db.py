@@ -4,9 +4,10 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from app.bootstrap import ensure_seed_data
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, ensure_runtime_schema
 
 Base.metadata.create_all(bind=engine)
+ensure_runtime_schema()
 
 
 def main():

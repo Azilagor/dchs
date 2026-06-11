@@ -11,7 +11,10 @@
     </div>
 
     <form method="get" class="filters">
-        <input type="search" name="q" value="{{ q }}" placeholder="Поиск по названию, тексту, номеру приказа">
+        <div class="live-search live-search-wide">
+            <input type="search" name="q" value="{{ q }}" placeholder="Поиск по названию, тексту, номеру приказа, тегам, файлам" autocomplete="off" data-live-search>
+            <div class="live-search-results" hidden></div>
+        </div>
         <select name="category">
             <option value="">Все категории</option>
             {% for cat in categories %}<option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}

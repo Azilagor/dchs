@@ -1,27 +1,23 @@
 # Справочник МЧС на FastAPI + Jinja2
 
-Готовый MVP сайта-справочника: документы, инструкции, видео, приказы, ссылки, статьи, поиск, категории, теги, роли и простая админ-панель.
+MVP информационно-справочной системы: документы, инструкции, приказы, видео, ссылки, теги, категории, поиск и простая админ-панель.
 
-## Функции
+## Что уже есть
 
-- Публичная главная страница.
-- Каталог материалов.
-- Поиск по названию, описанию, тексту и номеру документа.
-- Фильтры по категории, типу материала и тегу.
-- Страница материала с файлами, ссылками и видео.
-- Авторизация через cookie-session.
-- Роли: `admin`, `moderator`, `editor`, `staff`.
-- Админка для материалов, категорий, отделов и пользователей.
-- Загрузка файлов.
-- Публичные и внутренние материалы.
-- Статусы: черновик, на проверке, опубликовано, архив.
-- Простая версионность при редактировании материала.
+- публичная главная страница и каталог материалов
+- поиск по названию, описанию, тексту, тегам, категориям, файлам и ссылкам
+- живой поиск с подсказками
+- индексация содержимого PDF/DOCX/TXT для поиска
+- роли `admin`, `moderator`, `editor`, `staff`
+- загрузка файлов
+- админка для материалов, категорий, отделов и пользователей
+- пагинация в списках материалов
 
 ## Быстрый запуск
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 python scripts/init_db.py
 uvicorn app.main:app --reload
@@ -31,84 +27,70 @@ uvicorn app.main:app --reload
 
 ```text
 http://127.0.0.1:8000
-```
-
-Админка:
-
-```text
 http://127.0.0.1:8000/admin
 ```
 
-Данные по умолчанию:
+Дефолтный админ:
 
 ```text
 Email: admin@mchs.local
 Password: admin12345
 ```
 
-Пароль можно поменять через переменные окружения перед `init_db.py`:
+## Поиск по PDF/DOCX
+
+После загрузки новых файлов их текст индексируется автоматически.
+
+Чтобы переиндексировать уже существующие материалы и вложения:
 
 ```bash
-export ADMIN_EMAIL="admin@example.com"
-export ADMIN_PASSWORD="strong-password"
+python scripts/reindex_search.py
+```
+
+Для извлечения текста используются зависимости:
+
+- `pypdf`
+- `python-docx`
+
+Формат `.doc` не индексируется полноценно без внешних конвертеров.
+
+## PostgreSQL для production
+
+Для production рекомендуется PostgreSQL.
+
+Пример `DATABASE_URL`:
+
+```text
+postgresql+psycopg2://mchs_user:strong-password@localhost:5432/mchs_directory
+```
+
+Пример запуска с PostgreSQL:
+
+```bash
+set DATABASE_URL=postgresql+psycopg2://mchs_user:strong-password@localhost:5432/mchs_directory
 python scripts/init_db.py
-```
-
-## PostgreSQL
-
-Для PostgreSQL укажи `DATABASE_URL`:
-
-```bash
-export DATABASE_URL="postgresql+psycopg2://user:password@localhost:5432/mchs_directory"
-```
-
-И добавь драйвер:
-
-```bash
-pip install psycopg2-binary
-```
-
-После этого:
-
-```bash
-python scripts/init_db.py
+python scripts/reindex_search.py
 uvicorn app.main:app --reload
 ```
 
-## Структура
+Или через `.env` / настройки окружения.
 
-```text
-app/
-  main.py
-  config.py
-  database.py
-  models.py
-  security.py
-  utils.py
-  routers/
-    public.py
-    auth.py
-    admin.py
-templates/
-  base.html
-  home.html
-  materials/
-  categories/
-  admin/
-static/
-  css/styles.css
-scripts/
-  init_db.py
-uploads/
-```
+## Полезные переменные окружения
 
-## Что улучшить для production
+- `DATABASE_URL` — SQLite или PostgreSQL
+- `SECRET_KEY` — секрет для session middleware
+- `ADMIN_EMAIL` — email дефолтного администратора
+- `ADMIN_PASSWORD` — пароль дефолтного администратора
+- `TINYMCE_API_KEY` — ключ TinyMCE, если позже снова включите редактор
+- `MAX_UPLOAD_SIZE_MB` — лимит размера одного файла
+- `PAGE_SIZE` — размер страницы публичного каталога
+- `ADMIN_PAGE_SIZE` — размер страницы в админке
+- `ALLOWED_UPLOAD_EXTENSIONS` — разрешенные расширения загрузок
 
-- Подключить Alembic для миграций.
-- Сделать полноценный PostgreSQL full-text search.
-- Добавить извлечение текста из PDF/DOCX для поиска внутри файлов.
-- Добавить аудит действий пользователей.
-- Добавить удаление/замену отдельных файлов в админке.
-- Подключить S3/MinIO для хранения файлов.
-- Настроить Nginx + Gunicorn/Uvicorn workers + SSL.
-- Включить `https_only=True` в `SessionMiddleware` после настройки HTTPS.
+## Production notes
+
+- лучше вынести БД на PostgreSQL
+- добавить Alembic для миграций
+- включить HTTPS и `https_only=True`
+- добавить резервное копирование БД и uploads
+- при большом объеме файлов вынести хранение в S3/MinIO

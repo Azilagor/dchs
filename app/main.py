@@ -5,11 +5,12 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.bootstrap import ensure_seed_data
 from app.config import BASE_DIR, SECRET_KEY, UPLOAD_DIR
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, ensure_runtime_schema
 from app.routers import admin, auth, public
 from app.template_config import templates
 
 Base.metadata.create_all(bind=engine)
+ensure_runtime_schema()
 
 app = FastAPI(title="MCHS Directory")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax", https_only=False)

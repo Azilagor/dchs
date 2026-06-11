@@ -12,7 +12,7 @@
         <a class="brand" href="/">
             <img class="brand-logo" src="/site-assets/logo.jpg" alt="Логотип">
             <div class="brand-copy">
-                <span class="brand-subtitle">Департамент ЧС по г. Алматы</span>
+                <span class="brand-subtitle">Департамент по чрезвычайным ситуациям г. Алматы</span>
             </div>
         </a>
         <nav class="nav-links">
@@ -31,21 +31,20 @@
     {% block content %}{% endblock %}
 </main>
 <footer class="footer">
-    <div class="container footer-grid">
+    <div class="container footer-grid footer-grid-compact">
         <div class="footer-brand">
             <img class="footer-logo" src="/site-assets/logo.jpg" alt="Логотип">
             <div>
-                <strong>Департамент ЧС по городу Алматы</strong>
+                <strong>Департамент по чрезвычайным ситуациям г. Алматы</strong>
                 <p>Информационно-справочная система для сотрудников и внутренних материалов.</p>
             </div>
         </div>
         <div>
             <h3>Контакты</h3>
-            <a class="footer-link" href="tel:+77273379248">+7 (727) 337-92-48</a>
-            <a class="footer-link" href="mailto:admin@mchs.local">admin@mchs.local</a>
-            <p>Пн — Пт</p>
-            <p>09:00–18:30</p>
-            <p>Перерыв 13:00–14:30</p>
+            <a class="footer-link" href="tel:+77052333575">+7 705 233 3575</a>
+            <p>Пн - Пт</p>
+            <p>09:00-18:30</p>
+            <p>Перерыв 13:00-14:30</p>
         </div>
         <div>
             <h3>Адрес</h3>
@@ -56,13 +55,108 @@
             <p>050060 / A15E4H2</p>
         </div>
         <div>
-            <h3>Соцсети</h3>
-            <a class="footer-link" href="#">Instagram</a>
-            <a class="footer-link" href="#">Telegram</a>
-            <a class="footer-link" href="#">YouTube</a>
+            <h3>Instagram</h3>
+            <a class="footer-link" href="https://www.instagram.com/112kz_?igsh=MXNvMnA4MHA3cTRvZg==" target="_blank" rel="noopener noreferrer">@112kz_</a>
         </div>
     </div>
 </footer>
+<script>
+(() => {
+    const inputs = Array.from(document.querySelectorAll("[data-live-search]"));
+    if (!inputs.length) return;
+
+    inputs.forEach((input) => {
+        const wrapper = input.closest(".live-search");
+        const results = wrapper?.querySelector(".live-search-results");
+        if (!wrapper || !results) return;
+
+        let activeIndex = -1;
+        let items = [];
+        let timer = null;
+
+        function clearResults() {
+            items = [];
+            activeIndex = -1;
+            results.innerHTML = "";
+            results.hidden = true;
+        }
+
+        function render(data) {
+            items = data;
+            activeIndex = -1;
+            if (!items.length) {
+                results.innerHTML = '<div class="live-search-empty">Ничего не найдено</div>';
+                results.hidden = false;
+                return;
+            }
+
+            results.innerHTML = items.map((item, index) => `
+                <a class="live-search-item" href="${item.url}" data-index="${index}">
+                    <span class="live-search-title">${item.title}</span>
+                    <span class="live-search-meta">${item.type}${item.category ? " · " + item.category : ""}</span>
+                    <span class="live-search-snippet">${item.snippet}</span>
+                </a>
+            `).join("");
+            results.hidden = false;
+        }
+
+        function updateActive(nextIndex) {
+            const links = Array.from(results.querySelectorAll(".live-search-item"));
+            if (!links.length) return;
+            activeIndex = (nextIndex + links.length) % links.length;
+            links.forEach((link, i) => link.classList.toggle("is-active", i === activeIndex));
+        }
+
+        async function fetchResults(query) {
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return clearResults();
+                const data = await response.json();
+                render(data.items || []);
+            } catch {
+                clearResults();
+            }
+        }
+
+        input.addEventListener("input", () => {
+            const query = input.value.trim();
+            clearTimeout(timer);
+            if (query.length < 2) {
+                clearResults();
+                return;
+            }
+            timer = setTimeout(() => fetchResults(query), 180);
+        });
+
+        input.addEventListener("keydown", (event) => {
+            const links = Array.from(results.querySelectorAll(".live-search-item"));
+            if (!links.length) return;
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                updateActive(activeIndex + 1);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                updateActive(activeIndex - 1);
+            } else if (event.key === "Enter" && activeIndex >= 0) {
+                event.preventDefault();
+                links[activeIndex].click();
+            } else if (event.key === "Escape") {
+                clearResults();
+            }
+        });
+
+        input.addEventListener("blur", () => {
+            setTimeout(clearResults, 150);
+        });
+
+        wrapper.addEventListener("mousedown", (event) => {
+            if (event.target.closest(".live-search-item")) return;
+            event.preventDefault();
+        });
+    });
+})();
+</script>
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

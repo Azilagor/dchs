@@ -69,6 +69,7 @@ class Material(Base):
     visibility = Column(String(50), index=True, default="public", nullable=False)  # public, internal
     short_description = Column(Text, nullable=True)
     content = Column(Text, nullable=True)
+    search_text = Column(Text, nullable=True)
     order_number = Column(String(100), nullable=True)
     is_pinned = Column(Boolean, default=False, nullable=False)
     views_count = Column(Integer, default=0, nullable=False)
@@ -102,6 +103,7 @@ class MaterialFile(Base):
     file_path = Column(String(1000), nullable=False)
     file_type = Column(String(100), nullable=True)
     size_bytes = Column(Integer, nullable=True)
+    extracted_text = Column(Text, nullable=True)
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     material = relationship("Material", back_populates="files")

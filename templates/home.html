@@ -2,15 +2,7 @@
 {% block title %}Главная · {{ PROJECT_NAME }}{% endblock %}
 {% block content %}
 <section class="hero">
-    <div class="container hero-grid">
-        <div class="hero-copy">
-            <h1>Управление по ЧС Бостандыкского района</h1>
-            <p class="hero-text">Единое пространство для быстрого доступа к внутренним материалам, справочной информации и важным публикациям.</p>
-            <form action="/materials" method="get" class="search-box">
-                <input type="search" name="q" placeholder="Например: эвакуация, пожарная безопасность, приказ №...">
-                <button type="submit">Найти</button>
-            </form>
-        </div>
+    <div class="container hero-grid hero-grid-swapped">
         <div class="hero-slider" data-slider>
             <div class="hero-slider-track">
                 <figure class="hero-slide is-active">
@@ -29,19 +21,46 @@
                 <button type="button" class="slider-arrow" data-slider-next aria-label="Следующее изображение">&#8250;</button>
             </div>
         </div>
+        <div class="hero-copy">
+            <p class="eyebrow">Департамент по чрезвычайным ситуациям г. Алматы</p>
+            <h1>Управление по чрезвычайным ситуациям Бостандыкского района</h1>
+            <p class="hero-text">Единое пространство для быстрого доступа к внутренним материалам, справочной информации и важным публикациям.</p>
+            <form action="/materials" method="get" class="search-box">
+                <div class="live-search">
+                    <input type="search" name="q" placeholder="Например: эвакуация, пожарная безопасность, приказ №..." autocomplete="off" data-live-search>
+                    <div class="live-search-results" hidden></div>
+                </div>
+                <button type="submit">Найти</button>
+            </form>
+        </div>
     </div>
 </section>
 
 <section class="container section">
     <div class="section-head">
-        <h2>Быстрые разделы</h2>
+        <h2>Основные направления</h2>
         <a href="/materials">Все материалы</a>
     </div>
-    <div class="type-grid">
-        {% for type in material_types %}
-            <a class="type-card" href="/materials?material_type={{ type }}">{{ type|material_type_label }}</a>
-        {% endfor %}
+    <div class="feature-grid">
+        <a class="feature-card" href="/materials?q=Государственный инспектор в области пожарной безопасности">
+            <h3>Государственный инспектор в области пожарной безопасности</h3>
+            <p>Нормативные материалы, приказы, инструкции и служебные документы по направлению пожарной безопасности.</p>
+            <span class="feature-link">Открыть подборку</span>
+        </a>
+        <a class="feature-card feature-card-dark" href="/materials?q=Сотрудникам Службы пожаротушения и аварийно-спасательных работ">
+            <h3>Сотрудникам Службы пожаротушения и аварийно-спасательных работ</h3>
+            <p>Оперативные материалы, методические документы и полезные рабочие подборки для подразделений службы.</p>
+            <span class="feature-link">Открыть подборку</span>
+        </a>
     </div>
+    <details class="more-sections">
+        <summary class="button more-sections-toggle">Еще разделы</summary>
+        <div class="type-grid more-sections-grid">
+            {% for type in material_types %}
+                <a class="type-card" href="/materials?material_type={{ type }}">{{ type|material_type_label }}</a>
+            {% endfor %}
+        </div>
+    </details>
 </section>
 
 {% if pinned_materials %}

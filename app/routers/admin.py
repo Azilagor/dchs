@@ -10,6 +10,7 @@ from app.config import ADMIN_PAGE_SIZE, MAX_UPLOAD_SIZE_MB
 from app.database import get_db
 from app.models import Category, Department, Material, MaterialFile, MaterialLink, MaterialVersion, MaterialVideo, Tag, User
 from app.security import hash_password, require_roles
+from app.search_index import refresh_file_extracted_text, refresh_material_search_text
 from app.template_config import templates
 from app.utils import get_or_create_tags, parse_lines, save_upload_file, slugify, unique_material_slug
 
@@ -122,6 +123,7 @@ async def create_material(
         _replace_links(material, links)
         _replace_videos(material, videos)
         await _append_files(material, files)
+        refresh_material_search_text(material)
     except ValueError as exc:
         db.rollback()
         context = _material_form_context(
@@ -224,6 +226,7 @@ async def edit_material(
         _replace_links(material, links)
         _replace_videos(material, videos)
         await _append_files(material, files)
+        refresh_material_search_text(material)
     except ValueError as exc:
         db.rollback()
         material = (
@@ -451,7 +454,9 @@ async def _append_files(material: Material, files: Optional[List[UploadFile]]):
     for upload in files:
         saved = await save_upload_file(upload, "documents")
         if saved:
-            material.files.append(MaterialFile(title=saved["original_name"], **saved))
+            file = MaterialFile(title=saved["original_name"], **saved)
+            refresh_file_extracted_text(file)
+            material.files.append(file)
 
 
 def _unique_category_slug(db: Session, name: str) -> str:

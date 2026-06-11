@@ -3,6 +3,7 @@ import os
 from sqlalchemy.orm import Session
 
 from app.models import Category, Department, Material, User
+from app.search_index import refresh_material_search_text
 from app.security import hash_password
 from app.utils import slugify, unique_material_slug
 
@@ -45,27 +46,27 @@ def ensure_seed_data(db: Session) -> tuple[str, str]:
 
     if db.query(Material).count() == 0:
         category = db.query(Category).filter(Category.name == "Пожарная безопасность").first()
-        db.add(
-            Material(
-                title="Памятка по действиям при пожаре",
-                slug=unique_material_slug(db, "Памятка по действиям при пожаре"),
-                material_type="instruction",
-                status="published",
-                visibility="public",
-                category_id=category.id if category else None,
-                short_description="Краткая инструкция для сотрудников и посетителей.",
-                content=(
-                    "1. Сохраняйте спокойствие.\n"
-                    "2. Сообщите о пожаре ответственному лицу.\n"
-                    "3. Используйте ближайший эвакуационный выход.\n"
-                    "4. Не пользуйтесь лифтом.\n"
-                    "5. После эвакуации следуйте указаниям ответственных лиц."
-                ),
-                created_by_id=admin.id,
-                updated_by_id=admin.id,
-                is_pinned=True,
-            )
+        material = Material(
+            title="Памятка по действиям при пожаре",
+            slug=unique_material_slug(db, "Памятка по действиям при пожаре"),
+            material_type="instruction",
+            status="published",
+            visibility="public",
+            category_id=category.id if category else None,
+            short_description="Краткая инструкция для сотрудников и посетителей.",
+            content=(
+                "1. Сохраняйте спокойствие.\n"
+                "2. Сообщите о пожаре ответственному лицу.\n"
+                "3. Используйте ближайший эвакуационный выход.\n"
+                "4. Не пользуйтесь лифтом.\n"
+                "5. После эвакуации следуйте указаниям ответственных лиц."
+            ),
+            created_by_id=admin.id,
+            updated_by_id=admin.id,
+            is_pinned=True,
         )
+        refresh_material_search_text(material)
+        db.add(material)
         db.commit()
 
     return admin_email, admin_password

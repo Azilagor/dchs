@@ -1,15 +1,19 @@
 from pathlib import Path
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.config import PAGE_SIZE
 from app.database import get_db
-from app.models import Category, Material, Tag
+from app.models import Category, Material, MaterialFile, MaterialLink, Tag
 from app.security import get_current_user
+from app.search_index import strip_markup
 from app.template_config import templates
+from app.utils import material_type_label
 
 router = APIRouter()
 
@@ -25,6 +29,35 @@ def accessible_materials(db: Session, current_user):
     if not current_user:
         query = query.filter(Material.visibility == "public")
     return query
+
+
+def apply_material_search(query, q: str):
+    if not q or not q.strip():
+        return query
+    pattern = f"%{q.strip()}%"
+    return query.filter(
+        or_(
+            Material.search_text.ilike(pattern),
+            Material.title.ilike(pattern),
+            Material.short_description.ilike(pattern),
+            Material.content.ilike(pattern),
+            Material.order_number.ilike(pattern),
+            Material.category.has(Category.name.ilike(pattern)),
+            Material.tags.any(Tag.name.ilike(pattern)),
+            Material.files.any(MaterialFile.original_name.ilike(pattern)),
+            Material.files.any(MaterialFile.extracted_text.ilike(pattern)),
+            Material.links.any(MaterialLink.title.ilike(pattern)),
+            Material.links.any(MaterialLink.url.ilike(pattern)),
+        )
+    )
+
+
+def make_search_snippet(material: Material) -> str:
+    raw = material.short_description or material.content or material.search_text or ""
+    clean = strip_markup(raw)
+    if not clean:
+        return material.category.name if material.category else "Открыть материал"
+    return clean[:140] + ("..." if len(clean) > 140 else "")
 
 @router.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
@@ -56,6 +89,34 @@ def site_asset(filename: str):
         raise HTTPException(status_code=404, detail="Asset not found")
     return FileResponse(asset_path)
 
+
+@router.get("/api/search")
+def live_search(request: Request, q: str = "", limit: int = 8, db: Session = Depends(get_db)):
+    current_user = get_current_user(request, db)
+    limit = max(1, min(limit, 12))
+    trimmed = q.strip()
+    if len(trimmed) < 2:
+        return JSONResponse({"items": []})
+
+    query = apply_material_search(accessible_materials(db, current_user), trimmed)
+    materials = (
+        query.order_by(Material.is_pinned.desc(), Material.views_count.desc(), Material.published_at.desc().nullslast(), Material.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    items = [
+        {
+            "title": item.title,
+            "slug": item.slug,
+            "url": f"/materials/{item.slug}",
+            "category": item.category.name if item.category else "",
+            "type": material_type_label(item.material_type),
+            "snippet": make_search_snippet(item),
+        }
+        for item in materials
+    ]
+    return JSONResponse({"items": items})
+
 @router.get("/materials")
 def material_list(
     request: Request,
@@ -70,15 +131,7 @@ def material_list(
     query = accessible_materials(db, current_user)
 
     if q:
-        pattern = f"%{q.strip()}%"
-        query = query.filter(
-            or_(
-                Material.title.ilike(pattern),
-                Material.short_description.ilike(pattern),
-                Material.content.ilike(pattern),
-                Material.order_number.ilike(pattern),
-            )
-        )
+        query = apply_material_search(query, q)
     if category:
         query = query.join(Category).filter(Category.slug == category)
     if material_type:
