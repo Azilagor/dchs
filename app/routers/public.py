@@ -18,6 +18,10 @@ from app.utils import material_type_label
 router = APIRouter()
 
 MATERIAL_TYPES = ["document", "instruction", "order", "video", "link", "article", "faq", "template"]
+FEATURED_CATEGORY_NAMES = [
+    "Государственный инспектор в области пожарной безопасности",
+    "Сотрудникам Службы пожаротушения и аварийно-спасательных работ",
+]
 SITE_ASSETS = {
     "logo.jpg": Path("logo.jpg"),
     "photo1.jpeg": Path("photo1.jpeg"),
@@ -67,6 +71,20 @@ def home(request: Request, db: Session = Depends(get_db)):
     latest_materials = base.order_by(Material.published_at.desc().nullslast(), Material.created_at.desc()).limit(8).all()
     popular_materials = base.order_by(Material.views_count.desc(), Material.created_at.desc()).limit(5).all()
     categories = db.query(Category).filter(Category.is_active.is_(True)).order_by(Category.sort_order, Category.name).all()
+    categories_by_name = {category.name: category for category in categories}
+    featured_sections = []
+    for category_name in FEATURED_CATEGORY_NAMES:
+        category = categories_by_name.get(category_name)
+        if not category:
+            continue
+        featured_sections.append(
+            {
+                "name": category.name,
+                "slug": category.slug,
+                "description": category.description or "Открыть подборку материалов по направлению.",
+                "material_count": base.filter(Material.category_id == category.id).count(),
+            }
+        )
     return templates.TemplateResponse(
         request,
         "home.html",
@@ -78,6 +96,7 @@ def home(request: Request, db: Session = Depends(get_db)):
             "popular_materials": popular_materials,
             "categories": categories,
             "material_types": MATERIAL_TYPES,
+            "featured_sections": featured_sections,
         },
     )
 

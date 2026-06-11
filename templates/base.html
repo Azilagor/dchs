@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ PROJECT_NAME }}{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="{{ asset_url('/static/css/styles.css') }}">
 </head>
 <body>
 <header class="topbar">
     <div class="container nav">
         <a class="brand" href="/">
-            <img class="brand-logo" src="/site-assets/logo.jpg" alt="Логотип">
+            <img class="brand-logo" src="{{ asset_url('/site-assets/logo.jpg') }}" alt="Логотип">
             <div class="brand-copy">
                 <span class="brand-subtitle">Департамент по чрезвычайным ситуациям г. Алматы</span>
             </div>
@@ -33,7 +33,7 @@
 <footer class="footer">
     <div class="container footer-grid footer-grid-compact">
         <div class="footer-brand">
-            <img class="footer-logo" src="/site-assets/logo.jpg" alt="Логотип">
+            <img class="footer-logo" src="{{ asset_url('/site-assets/logo.jpg') }}" alt="Логотип">
             <div>
                 <strong>Департамент по чрезвычайным ситуациям г. Алматы</strong>
                 <p>Информационно-справочная система для сотрудников и внутренних материалов.</p>
@@ -150,7 +150,7 @@
             setTimeout(clearResults, 150);
         });
 
-        wrapper.addEventListener("mousedown", (event) => {
+        results.addEventListener("mousedown", (event) => {
             if (event.target.closest(".live-search-item")) return;
             event.preventDefault();
         });

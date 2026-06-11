@@ -6,10 +6,10 @@
         <div class="hero-slider" data-slider>
             <div class="hero-slider-track">
                 <figure class="hero-slide is-active">
-                    <img src="/site-assets/photo1.jpeg" alt="Сотрудники ДЧС">
+                    <img src="{{ asset_url('/site-assets/photo1.jpeg') }}" alt="Сотрудники ДЧС">
                 </figure>
                 <figure class="hero-slide">
-                    <img src="/site-assets/photo2.jpeg" alt="Рабочие материалы ДЧС">
+                    <img src="{{ asset_url('/site-assets/photo2.jpeg') }}" alt="Рабочие материалы ДЧС">
                 </figure>
             </div>
             <div class="hero-slider-controls">
@@ -42,16 +42,13 @@
         <a href="/materials">Все материалы</a>
     </div>
     <div class="feature-grid">
-        <a class="feature-card" href="/materials?q=Государственный инспектор в области пожарной безопасности">
-            <h3>Государственный инспектор в области пожарной безопасности</h3>
-            <p>Нормативные материалы, приказы, инструкции и служебные документы по направлению пожарной безопасности.</p>
-            <span class="feature-link">Открыть подборку</span>
+        {% for section in featured_sections %}
+        <a class="feature-card {% if loop.index0 == 1 %}feature-card-dark{% endif %}" href="/categories/{{ section.slug }}">
+            <h3>{{ section.name }}</h3>
+            <p>{{ section.description }}</p>
+            <span class="feature-link">Открыть подборку{% if section.material_count %} · {{ section.material_count }}{% endif %}</span>
         </a>
-        <a class="feature-card feature-card-dark" href="/materials?q=Сотрудникам Службы пожаротушения и аварийно-спасательных работ">
-            <h3>Сотрудникам Службы пожаротушения и аварийно-спасательных работ</h3>
-            <p>Оперативные материалы, методические документы и полезные рабочие подборки для подразделений службы.</p>
-            <span class="feature-link">Открыть подборку</span>
-        </a>
+        {% endfor %}
     </div>
     <details class="more-sections">
         <summary class="button more-sections-toggle">Еще разделы</summary>
