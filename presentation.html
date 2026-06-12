@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Презентация: Информационно-справочная система ДЧС</title>
+    <style>
+        :root {
+            --bg: #edf4fb;
+            --surface: rgba(255, 255, 255, 0.94);
+            --surface-strong: #ffffff;
+            --text: #12304f;
+            --muted: #5d7693;
+            --line: #d6e4f1;
+            --primary: #ef7d1a;
+            --primary-dark: #cf6410;
+            --accent: #0f4c81;
+            --accent-dark: #0a3559;
+            --shadow: 0 18px 50px rgba(15, 76, 129, 0.14);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(239, 125, 26, 0.18), transparent 26%),
+                radial-gradient(circle at top right, rgba(15, 76, 129, 0.16), transparent 30%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+            overflow: hidden;
+        }
+
+        .deck {
+            height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .topbar,
+        .footerbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 28px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .footerbar {
+            border-bottom: 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .brand img {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            object-fit: cover;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.15;
+        }
+
+        .brand p,
+        .meta,
+        .hint {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .viewport {
+            position: relative;
+            overflow: hidden;
+            padding: 26px;
+        }
+
+        .slides {
+            height: 100%;
+            display: flex;
+            transition: transform .35s ease;
+        }
+
+        .slide {
+            flex: 0 0 100%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        .slide-shell {
+            height: 100%;
+            display: grid;
+            gap: 22px;
+            grid-template-columns: 1.1fr .9fr;
+            background: var(--surface);
+            border: 1px solid rgba(214, 228, 241, 0.95);
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            padding: 34px;
+        }
+
+        .slide-shell.full {
+            grid-template-columns: 1fr;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #edf4fb;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            margin: 14px 0 10px;
+            font-size: clamp(30px, 4vw, 48px);
+            line-height: 1.04;
+            letter-spacing: -.03em;
+        }
+
+        h3 {
+            margin: 0 0 12px;
+            font-size: 24px;
+            line-height: 1.15;
+        }
+
+        .lead {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.55;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 22px;
+            display: grid;
+            gap: 12px;
+            font-size: 18px;
+            line-height: 1.45;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--surface-strong);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 18px;
+        }
+
+        .card strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 17px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .visual,
+        .visual-stack {
+            display: grid;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .mock-shot {
+            position: relative;
+            min-height: 240px;
+            background: linear-gradient(180deg, #f9fbfe 0%, #e6f0fa 100%);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .mock-shot::before {
+            content: "";
+            display: block;
+            height: 42px;
+            background: linear-gradient(90deg, #f0f4fa 0%, #ffffff 100%);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .mock-shot::after {
+            content: "";
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            width: 58px;
+            height: 12px;
+            border-radius: 999px;
+            background: #d3dfec;
+            box-shadow: 76px 0 0 #d3dfec, 152px 0 0 #d3dfec;
+        }
+
+        .shot-body {
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .shot-hero {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 12px;
+        }
+
+        .pill-row,
+        .line-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill,
+        .line,
+        .tile,
+        .panel {
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid var(--line);
+        }
+
+        .pill {
+            height: 26px;
+            min-width: 92px;
+            background: #edf4fb;
+        }
+
+        .line {
+            height: 14px;
+        }
+
+        .line.wide { width: 100%; }
+        .line.mid { width: 72%; }
+        .line.short { width: 42%; }
+
+        .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .tile,
+        .panel {
+            min-height: 78px;
+            padding: 12px;
+        }
+
+        .panel {
+            min-height: 120px;
+        }
+
+        .shot-caption {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            font-size: 14px;
+            color: var(--muted);
+            padding: 0 4px;
+        }
+
+        .route {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 7px 11px;
+            background: #0f4c81;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .notes {
+            background: #fff8f1;
+            border: 1px solid #f3d2b1;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .notes strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .notes p {
+            margin: 0;
+            color: #7a5a35;
+            line-height: 1.55;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 16px;
+            background: var(--primary);
+            color: #fff;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        button:hover { background: var(--primary-dark); }
+
+        button.secondary {
+            background: #edf4fb;
+            color: var(--text);
+        }
+
+        .progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .bar {
+            width: 220px;
+            height: 10px;
+            border-radius: 999px;
+            background: #dce8f4;
+            overflow: hidden;
+        }
+
+        .bar > span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .accent-box {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: #fff;
+            border-radius: 26px;
+            padding: 22px;
+        }
+
+        .accent-box p { color: rgba(255,255,255,.85); }
+
+        .accent-box h3 { font-size: 22px; }
+
+        @media (max-width: 1100px) {
+            body { overflow: auto; }
+            .deck { height: auto; min-height: 100vh; }
+            .viewport { overflow: visible; }
+            .slides {
+                display: grid;
+                gap: 20px;
+                transform: none !important;
+                height: auto;
+            }
+            .slide {
+                height: auto;
+                min-height: auto;
+            }
+            .slide-shell,
+            .slide-shell.full,
+            .shot-hero,
+            .cards,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .topbar,
+            .footerbar {
+                position: sticky;
+                z-index: 2;
+            }
+            .topbar { top: 0; }
+            .footerbar { bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="deck">
+        <header class="topbar">
+            <div class="brand">
+                <img src="logo.jpg" alt="Логотип ДЧС">
+                <div>
+                    <h1>Информационно-справочная система</h1>
+                    <p>ДЧС г. Алматы Бостандыкского района</p>
+                </div>
+            </div>
+            <p class="meta">HTML-презентация проекта</p>
+        </header>
+
+        <main class="viewport">
+            <section class="slides" id="slides">
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 1</span>
+                            <h2>Информационно-справочная система для ДЧС г. Алматы Бостандыкского района</h2>
+                            <p class="lead">Цифровая платформа для хранения, поиска и управления служебными материалами.</p>
+                            <div class="notes">
+                                <strong>Текст выступления</strong>
+                                <p>Проект разработан как единое цифровое пространство для доступа к приказам, инструкциям, нормативным и внутренним материалам. Система помогает быстро находить нужную информацию и поддерживать ее в актуальном состоянии.</p>
+                            </div>
+                        </div>
+                        <div class="visual">
+                            <div class="mock-shot">
+                                <div class="shot-body">
+                                    <div class="shot-hero">
+                                        <div class="panel">
+                                            <div class="pill-row">
+                                                <span class="pill"></span>
+                                                <span class="pill"></span>
+                                            </div>
+                                            <div class="line-row">
+                                                <span class="line wide"></span>
+                                                <span class="line mid"></span>
+                                                <span class="line short"></span>
+                                            </div>
+                                        </div>
+                                        <div class="panel"></div>
+                                    </div>
+                                    <div class="tile-grid">
+                                        <div class="tile"></div>
+                                        <div class="tile"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="shot-caption">
+                                <span>Рекомендуемый скриншот: главная страница системы</span>
+                                <span class="route">/</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell full">
+                        <div>
+                            <span class="eyebrow">Слайд 2</span>
+                            <h2>Актуальность проекта</h2>
+                            <div class="grid-3">
+                                <div class="card">
+                                    <strong>Разрозненные источники</strong>
+                                    <p>Документы часто хранятся в разных папках, чатах и на отдельных устройствах.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Медленный поиск</strong>
+                                    <p>На поиск нужного приказа или инструкции уходит лишнее время.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Риск ошибок</strong>
+                                    <p>Есть вероятность использовать устаревшую версию документа.</p>
+                                </div>
+                            </div>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>В ежедневной работе сотрудников критично быстро получать доступ к актуальной информации. Поэтому возникла необходимость в единой системе, где все материалы находятся в одном месте и доступны через понятный интерфейс.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 3</span>
+                            <h2>Цель и задачи проекта</h2>
+                            <p class="lead">Создать единую цифровую среду для хранения, систематизации, поиска и безопасного использования материалов ДЧС.</p>
+                            <ul>
+                                <li>Централизовать документы и служебные публикации.</li>
+                                <li>Обеспечить быстрый поиск по содержимому и метаданным.</li>
+                                <li>Разграничить публичный и внутренний доступ.</li>
+                                <li>Упростить публикацию и обновление контента.</li>
+                                <li>Дать администраторам удобную панель управления.</li>
+                            </ul>
+                        </div>
+                        <div class="visual">
+                            <div class="accent-box">
+                                <h3>Ключевая идея</h3>
+                                <p>Все материалы системы должны быть доступны быстро, структурированно и в актуальной версии.</p>
+                            </div>
+                            <div class="cards">
+                                <div class="card">
+                                    <strong>Пользователи</strong>
+                                    <p>Поиск, чтение, просмотр документов.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Администраторы</strong>
+                                    <p>Добавление, редактирование, публикация, контроль доступа.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 4</span>
+                            <h2>Общая структура системы</h2>
+                            <div class="cards">
+                                <div class="card">
+                                    <strong>Публичная часть</strong>
+                                    <p>Главная страница, каталог материалов, категории, поиск, карточки документов и просмотр файлов.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Административная часть</strong>
+                                    <p>Панель управления, публикация материалов, загрузка файлов, управление категориями и пользователями.</p>
+                                </div>
+                            </div>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Система состоит из двух частей: пользовательской и административной. Это позволяет отделить удобный доступ к материалам от инструментов управления контентом и правами доступа.</p>
+                            </div>
+                        </div>
+                        <div class="visual">
+                            <div class="mock-shot">
+                                <div class="shot-body">
+                                    <div class="cards">
+                                        <div class="panel"></div>
+                                        <div class="panel"></div>
+                                    </div>
+                                    <div class="tile-grid">
+                                        <div class="tile"></div>
+                                        <div class="tile"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="shot-caption">
+                                <span>На слайде можно заменить макет схемой блоков системы</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 5</span>
+                            <h2>Публичный интерфейс системы</h2>
+                            <ul>
+                                <li>Главная страница с навигацией и поиском.</li>
+                                <li>Каталог материалов с фильтрами и пагинацией.</li>
+                                <li>Разделы и категории для быстрого перехода.</li>
+                                <li>Понятный современный интерфейс для пользователей.</li>
+                            </ul>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Публичная часть построена так, чтобы пользователь мог быстро перейти к нужному документу через главную страницу, каталог или категории. Интерфейс сделан простым и понятным, без лишних действий.</p>
+                            </div>
+                        </div>
+                        <div class="visual-stack">
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="shot-hero">
+                                            <div class="panel"></div>
+                                            <div class="panel"></div>
+                                        </div>
+                                        <div class="tile-grid">
+                                            <div class="tile"></div>
+                                            <div class="tile"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Главная страница</span>
+                                    <span class="route">/</span>
+                                </div>
+                            </div>
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="panel"></div>
+                                        <div class="tile-grid">
+                                            <div class="tile"></div>
+                                            <div class="tile"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Каталог материалов</span>
+                                    <span class="route">/materials</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 6</span>
+                            <h2>Карточка материала и работа с файлами</h2>
+                            <ul>
+                                <li>Подробная страница материала с описанием и метаданными.</li>
+                                <li>Прикрепленные файлы, ссылки и дополнительные ресурсы.</li>
+                                <li>Предпросмотр файлов перед скачиванием.</li>
+                                <li>Отдельная кнопка загрузки документа при необходимости.</li>
+                            </ul>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Материалы открываются на отдельной странице, где пользователь видит всю основную информацию и вложения. Для файлов предусмотрен отдельный режим чтения, чтобы сначала ознакомиться с содержимым, а затем скачать документ.</p>
+                            </div>
+                        </div>
+                        <div class="visual-stack">
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="pill-row">
+                                            <span class="pill"></span>
+                                            <span class="pill"></span>
+                                            <span class="pill"></span>
+                                        </div>
+                                        <div class="panel"></div>
+                                        <div class="panel"></div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Карточка материала</span>
+                                    <span class="route">/materials/{slug}</span>
+                                </div>
+                            </div>
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="panel" style="min-height: 220px;"></div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Предпросмотр файла</span>
+                                    <span class="route">/files/{id}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 7</span>
+                            <h2>Поиск и фильтрация</h2>
+                            <ul>
+                                <li>Поиск по названию, описанию и тексту документа.</li>
+                                <li>Поиск по категориям, тегам, файлам и связанным ссылкам.</li>
+                                <li>Живые подсказки на главной странице.</li>
+                                <li>Фильтрация каталога по нескольким параметрам.</li>
+                            </ul>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Одно из главных преимуществ системы - расширенный поиск. Он особенно важен при большом количестве документов, когда скорость доступа к нужной информации напрямую влияет на эффективность работы сотрудников.</p>
+                            </div>
+                        </div>
+                        <div class="visual">
+                            <div class="mock-shot">
+                                <div class="shot-body">
+                                    <div class="panel"></div>
+                                    <div class="tile-grid">
+                                        <div class="tile"></div>
+                                        <div class="tile"></div>
+                                    </div>
+                                    <div class="panel"></div>
+                                </div>
+                            </div>
+                            <div class="shot-caption">
+                                <span>Каталог с фильтрами и результатами</span>
+                                <span class="route">/materials</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 8</span>
+                            <h2>Административная панель</h2>
+                            <ul>
+                                <li>Добавление и редактирование материалов.</li>
+                                <li>Управление статусами публикации и доступом.</li>
+                                <li>Работа с категориями, файлами, слайдами и пользователями.</li>
+                                <li>Отдельная форма для загрузки и сопровождения контента.</li>
+                            </ul>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Административная часть системы упрощает сопровождение справочника. Через нее можно управлять материалами, менять статусы, загружать вложения и поддерживать структуру системы без технически сложных действий.</p>
+                            </div>
+                        </div>
+                        <div class="visual-stack">
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="tile-grid">
+                                            <div class="tile"></div>
+                                            <div class="tile"></div>
+                                            <div class="tile"></div>
+                                            <div class="tile"></div>
+                                        </div>
+                                        <div class="panel"></div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Панель управления</span>
+                                    <span class="route">/admin</span>
+                                </div>
+                            </div>
+                            <div class="visual">
+                                <div class="mock-shot">
+                                    <div class="shot-body">
+                                        <div class="panel" style="min-height: 200px;"></div>
+                                    </div>
+                                </div>
+                                <div class="shot-caption">
+                                    <span>Список и форма материалов</span>
+                                    <span class="route">/admin/materials</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 9</span>
+                            <h2>Преимущества решения</h2>
+                            <div class="cards">
+                                <div class="card">
+                                    <strong>Быстрый доступ</strong>
+                                    <p>Сокращение времени поиска документов и инструкций.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Единая среда</strong>
+                                    <p>Централизованное хранение материалов в одном интерфейсе.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Актуальность</strong>
+                                    <p>Уменьшение риска работы с устаревшими версиями.</p>
+                                </div>
+                                <div class="card">
+                                    <strong>Масштабируемость</strong>
+                                    <p>Возможность развития через аналитику, мобильную адаптацию и интеграции.</p>
+                                </div>
+                            </div>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Система решает не только текущую задачу хранения документов, но и создает основу для дальнейшей цифровизации. Ее можно масштабировать, дополнять аналитикой и интеграцией с другими внутренними сервисами.</p>
+                            </div>
+                        </div>
+                        <div class="visual">
+                            <div class="accent-box">
+                                <h3>Технологическая база</h3>
+                                <p>FastAPI, Jinja2, ролевая модель доступа, поиск по содержимому PDF и DOCX, работа с файлами, публичная и административная части.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="slide">
+                    <div class="slide-shell">
+                        <div>
+                            <span class="eyebrow">Слайд 10</span>
+                            <h2>Заключение</h2>
+                            <p class="lead">Проект формирует единое информационное пространство для ДЧС Бостандыкского района и повышает эффективность работы с документами.</p>
+                            <ul>
+                                <li>Создана единая информационно-справочная система.</li>
+                                <li>Реализованы поиск, категории, файлы и административное управление.</li>
+                                <li>Обеспечен быстрый доступ к актуальным материалам.</li>
+                                <li>Проект имеет практическую ценность и потенциал развития.</li>
+                            </ul>
+                            <div class="notes" style="margin-top: 18px;">
+                                <strong>Текст выступления</strong>
+                                <p>Таким образом, система является удобным и практически значимым инструментом для подразделения. Она ускоряет доступ к информации, упрощает сопровождение материалов и создает основу для дальнейшей цифровизации внутренних процессов.</p>
+                            </div>
+                        </div>
+                        <div class="visual">
+                            <div class="mock-shot">
+                                <div class="shot-body">
+                                    <div class="panel"></div>
+                                    <div class="tile-grid">
+                                        <div class="tile"></div>
+                                        <div class="tile"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="shot-caption">
+                                <span>Финальный экран можно заменить общим скриншотом главной страницы или админки</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+
+        <footer class="footerbar">
+            <div class="progress">
+                <strong id="counter">1 / 10</strong>
+                <div class="bar"><span id="bar"></span></div>
+                <span class="hint">Стрелки клавиатуры, пробел и кнопки работают для переключения слайдов</span>
+            </div>
+            <div class="controls">
+                <button class="secondary" id="prev">Назад</button>
+                <button id="next">Далее</button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        (() => {
+            const slides = Array.from(document.querySelectorAll(".slide"));
+            const track = document.getElementById("slides");
+            const counter = document.getElementById("counter");
+            const bar = document.getElementById("bar");
+            const prev = document.getElementById("prev");
+            const next = document.getElementById("next");
+            let index = 0;
+
+            function render() {
+                const total = slides.length;
+                track.style.transform = `translateX(-${index * 100}%)`;
+                counter.textContent = `${index + 1} / ${total}`;
+                bar.style.width = `${((index + 1) / total) * 100}%`;
+                prev.disabled = index === 0;
+                next.disabled = index === total - 1;
+            }
+
+            function step(delta) {
+                index = Math.max(0, Math.min(slides.length - 1, index + delta));
+                render();
+            }
+
+            prev.addEventListener("click", () => step(-1));
+            next.addEventListener("click", () => step(1));
+
+            window.addEventListener("keydown", (event) => {
+                if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+                    event.preventDefault();
+                    step(1);
+                }
+                if (["ArrowLeft", "PageUp"].includes(event.key)) {
+                    event.preventDefault();
+                    step(-1);
+                }
+                if (event.key === "Home") {
+                    index = 0;
+                    render();
+                }
+                if (event.key === "End") {
+                    index = slides.length - 1;
+                    render();
+                }
+            });
+
+            render();
+        })();
+    </script>
+</body>
+</html>

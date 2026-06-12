@@ -3,7 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{{ PROJECT_NAME }}{% endblock %}</title>
+    <title>{% block title %}{{ meta_title or PROJECT_NAME }}{% endblock %}</title>
+    <meta name="description" content="{{ meta_description or SITE_DESCRIPTION }}">
+    <meta name="robots" content="{{ meta_robots or 'index,follow' }}">
+    <link rel="canonical" href="{{ canonical_url or request.url }}">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:type" content="{{ og_type or 'website' }}">
+    <meta property="og:title" content="{{ og_title or meta_title or PROJECT_NAME }}">
+    <meta property="og:description" content="{{ og_description or meta_description or SITE_DESCRIPTION }}">
+    <meta property="og:url" content="{{ canonical_url or request.url }}">
+    <meta property="og:site_name" content="{{ PROJECT_NAME }}">
+    <meta property="og:image" content="{{ og_image_url or absolute_asset_url('/site-assets/logo.jpg', request) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ og_title or meta_title or PROJECT_NAME }}">
+    <meta name="twitter:description" content="{{ og_description or meta_description or SITE_DESCRIPTION }}">
+    <meta name="twitter:image" content="{{ og_image_url or absolute_asset_url('/site-assets/logo.jpg', request) }}">
     <link rel="stylesheet" href="{{ asset_url('/static/css/styles.css') }}">
 </head>
 <body>

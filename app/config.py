@@ -32,5 +32,10 @@ ALLOWED_UPLOAD_EXTENSIONS = tuple(
 
 PROJECT_NAME = os.getenv("PROJECT_NAME", "Справочник МЧС")
 ORGANIZATION_NAME = os.getenv("ORGANIZATION_NAME", "МЧС")
+SITE_URL = os.getenv("SITE_URL", "").rstrip("/")
+SITE_DESCRIPTION = os.getenv(
+    "SITE_DESCRIPTION",
+    "Справочник ДЧС Алматы с материалами, инструкциями, приказами и служебной информацией.",
+)
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)

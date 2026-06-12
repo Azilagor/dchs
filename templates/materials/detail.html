@@ -20,7 +20,7 @@
         <section class="attachment-section">
             <h2>Файлы</h2>
             {% for file in material.files %}
-                <a class="attachment" href="/files/{{ file.id }}/download" target="_blank">
+                <a class="attachment" href="/files/{{ file.id }}" target="_blank">
                     <span>{{ file.title or file.original_name }}</span>
                     <small>{{ file.file_type or 'Файл' }}</small>
                 </a>

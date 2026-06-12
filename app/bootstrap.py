@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.models import Category, Department, HeroSlide, Material, User
 from app.search_index import refresh_material_search_text
 from app.security import hash_password
-from app.utils import slugify, unique_material_slug
+from app.utils import unique_material_slug
 
 
 def ensure_seed_data(db: Session) -> tuple[str, str]:
@@ -22,42 +22,6 @@ def ensure_seed_data(db: Session) -> tuple[str, str]:
         )
         db.add(admin)
         db.flush()
-
-    categories = [
-        (
-            "Государственный инспектор в области пожарной безопасности",
-            "Нормативные материалы, приказы, инструкции и служебные документы по направлению пожарной безопасности.",
-        ),
-        (
-            "Сотрудникам Службы пожаротушения и аварийно-спасательных работ",
-            "Оперативные материалы, методические документы и полезные рабочие подборки для подразделений службы.",
-        ),
-        ("Пожарная безопасность", "Инструкции, памятки и регламенты по пожарной безопасности"),
-        ("Гражданская оборона", "Материалы по гражданской обороне и ЧС"),
-        ("Первая помощь", "Памятки и инструкции по первой помощи"),
-        ("Приказы", "Внутренние и публичные приказы"),
-        ("Видеоинструкции", "Обучающие видео и записи инструктажей"),
-    ]
-    featured_names = {
-        "Государственный инспектор в области пожарной безопасности",
-        "Сотрудникам Службы пожаротушения и аварийно-спасательных работ",
-    }
-    for order, (name, description) in enumerate(categories):
-        category = db.query(Category).filter(Category.name == name).first()
-        if not category:
-            db.add(
-                Category(
-                    name=name,
-                    slug=slugify(name),
-                    description=description,
-                    sort_order=order,
-                    featured_on_home=name in featured_names,
-                )
-            )
-        else:
-            if name in featured_names and not category.featured_on_home:
-                category.featured_on_home = True
-                category.sort_order = order
 
     if not db.query(Department).filter(Department.name == "Учебно-методический отдел").first():
         db.add(

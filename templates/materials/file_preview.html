@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ file.title or file.original_name }} · {{ PROJECT_NAME }}{% endblock %}
+{% block content %}
+<section class="container page preview-page">
+    <div class="preview-shell">
+        <div class="preview-head">
+            <div>
+                <div class="meta">
+                    <span>Предпросмотр файла</span>
+                    <a href="/materials/{{ material.slug }}">Материал</a>
+                </div>
+                <h1>{{ file.title or file.original_name }}</h1>
+                <p class="lead">Откройте файл в режиме чтения или скачайте его отдельно.</p>
+            </div>
+            <div class="preview-actions">
+                <a class="btn-light" href="/materials/{{ material.slug }}">Назад к материалу</a>
+                <a class="button" href="{{ preview.download_url }}">Скачать файл</a>
+            </div>
+        </div>
+
+        <div class="preview-frame-wrap">
+            {% if preview.can_inline %}
+                {% if preview.extension == ".txt" or preview.extension == ".rtf" %}
+                    <iframe class="preview-frame" src="{{ preview.inline_url }}"></iframe>
+                {% elif preview.extension == ".mp4" or preview.extension == ".mov" %}
+                    <video class="preview-media" controls preload="metadata">
+                        <source src="{{ preview.inline_url }}" type="{{ file.file_type or 'video/mp4' }}">
+                        Ваш браузер не поддерживает встроенное воспроизведение.
+                    </video>
+                {% else %}
+                    <iframe class="preview-frame" src="{{ preview.inline_url }}"></iframe>
+                {% endif %}
+            {% elif preview.can_use_office_viewer %}
+                <iframe class="preview-frame" src="{{ preview.office_preview_url }}" referrerpolicy="no-referrer"></iframe>
+            {% else %}
+                <div class="preview-empty">
+                    <h2>Предпросмотр недоступен</h2>
+                    <p>Этот формат браузер не умеет открывать напрямую. Файл можно скачать кнопкой выше.</p>
+                    {% if material.visibility != "public" %}
+                        <p class="muted">Для внутренних файлов внешний онлайн-просмотрщик не используется.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

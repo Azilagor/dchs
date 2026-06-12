@@ -359,6 +359,55 @@ button:hover, .button:hover { background: var(--primary-dark); }
 .order-number { color: var(--primary); font-weight: 800; }
 .attachment-section { margin-top: 32px; }
 .attachment { display: flex; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #f8fafc; border: 1px solid var(--line); border-radius: 14px; margin: 8px 0; }
+.preview-page { padding-top: 26px; }
+.preview-shell {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+}
+.preview-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.preview-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.preview-frame-wrap {
+    background: #e8f0f8;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 12px;
+    min-height: 72vh;
+}
+.preview-frame,
+.preview-media {
+    width: 100%;
+    min-height: calc(72vh - 24px);
+    border: 0;
+    border-radius: 14px;
+    background: #fff;
+}
+.preview-media {
+    display: block;
+    object-fit: contain;
+}
+.preview-empty {
+    min-height: calc(72vh - 24px);
+    display: grid;
+    place-content: center;
+    text-align: center;
+    padding: 24px;
+    background: #fff;
+    border-radius: 14px;
+}
 .auth-page { min-height: calc(100vh - 150px); display: grid; place-items: center; padding: 40px 16px; }
 .auth-card { width: min(440px, 100%); padding: 28px; display: grid; gap: 12px; }
 .alert { background: var(--soft); color: var(--primary); padding: 12px; border-radius: 12px; font-weight: 700; }
@@ -456,6 +505,8 @@ label { font-weight: 800; font-size: 14px; }
     .search-box { flex-direction: column; }
     .admin-sidebar, .form-side { position: static; }
     .inline-form { grid-template-columns: 1fr; }
+    .preview-head { flex-direction: column; }
+    .preview-actions { justify-content: flex-start; }
 }
 @media (max-width: 720px) {
     .brand {
