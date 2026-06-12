@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -21,6 +22,14 @@ SITE_ASSETS = {
     "photo1.jpeg": Path("photo1.jpeg"),
     "photo2.jpeg": Path("photo2.jpeg"),
 }
+
+
+def build_content_disposition(filename: str, disposition_type: str = "inline") -> str:
+    ascii_fallback = filename.encode("ascii", "ignore").decode("ascii").strip()
+    if not ascii_fallback:
+        ascii_fallback = "download"
+    encoded_filename = quote(filename, safe="")
+    return f'{disposition_type}; filename="{ascii_fallback}"; filename*=UTF-8\'\'{encoded_filename}'
 
 
 def resolve_slide_image_path(image_path: str) -> Path | None:
@@ -153,7 +162,7 @@ def download_file(file_id: int, request: Request, db: Session = Depends(get_db))
 
     media_type = file.file_type or "application/octet-stream"
     response = FileResponse(file_path, media_type=media_type)
-    response.headers["Content-Disposition"] = f'inline; filename="{file.original_name}"'
+    response.headers["Content-Disposition"] = build_content_disposition(file.original_name)
     return response
 
 
